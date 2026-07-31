@@ -244,10 +244,23 @@ const range   = (a, b) => { const o = []; for (let i = a; i <= b; i++) o.push(i)
 
 /* =========================================================
    1a. LINGUA — italiano se il dispositivo è in italiano,
-       inglese in tutti gli altri casi. Tutto il testo visibile
+       inglese in tutti gli altri casi; un interruttore manuale
+       nell'area genitori forza la scelta e sovrascrive il
+       rilevamento automatico (preferenza condivisa con
+       index.html tramite localStorage). Tutto il testo visibile
        e parlato passa da T (STR[LANG]).
    ========================================================= */
+const LANG_KEY = "giocamente_lang";
+const getLangOverride = () => {
+  try {
+    const v = localStorage.getItem(LANG_KEY);
+    return (v === "it" || v === "en") ? v : null;
+  } catch (e) { return null; }
+};
+const setLangOverride = v => { try { localStorage.setItem(LANG_KEY, v); } catch (e) {} };
 const LANG = (() => {
+  const o = getLangOverride();
+  if (o) return o;
   const l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
   return (l === "it" || l.indexOf("it-") === 0) ? "it" : "en";
 })();
@@ -273,6 +286,7 @@ const STR = {
     chooseGame: "Scegli un gioco",
     voiceOn: "Voce attiva",
     pTitle: "Area genitori", pSub: "Impostazioni",
+    pLang: "🌐 Lingua", pLangTarget: "English",
     pSounds: "🔉 Suoni", pVoice: "🗣️ Voce italiana",
     pCap: "📅 Una partita al giorno per gioco",
     pToday: (n, tot) => "🔓 Partite di oggi (" + n + "/" + tot + " fatte)",
@@ -312,6 +326,7 @@ const STR = {
     chooseGame: "Pick a game",
     voiceOn: "Voice on",
     pTitle: "Parents' area", pSub: "Settings",
+    pLang: "🌐 Language", pLangTarget: "Italiano",
     pSounds: "🔉 Sounds", pVoice: "🗣️ Spoken voice",
     pCap: "📅 One session per game per day",
     pToday: (n, tot) => "🔓 Today's sessions (" + n + "/" + tot + " done)",
@@ -786,6 +801,8 @@ function openParents() {
   sh.innerHTML =
     '<div class="sheetbox">' +
       '<h2>' + T.pTitle + '</h2><p>' + T.pSub + '</p>' +
+      '<div class="optrow"><span>' + T.pLang + '</span>' +
+        '<button class="bigbtn b" data-a="lang" style="min-width:0;min-height:0;padding:10px 18px;font-size:16px;margin:0">' + T.pLangTarget + '</button></div>' +
       '<div class="optrow"><span>' + T.pSounds + '</span><button class="sw' + (S.sound ? " on" : "") + '" data-t="sound"></button></div>' +
       '<div class="optrow"><span>' + T.pVoice + '</span><button class="sw' + (S.voice ? " on" : "") + '" data-t="voice"></button></div>' +
       '<div class="optrow"><span>' + T.pCap + '</span><button class="sw' + (d.cap ? " on" : "") + '" data-t="cap"></button></div>' +
@@ -812,6 +829,8 @@ function openParents() {
     }
     const u = e.target.closest('[data-a="unlock"]');
     if (u) { Daily.unlockToday(); u.textContent = T.pUnlocked; u.disabled = true; return; }
+    const lg = e.target.closest('[data-a="lang"]');
+    if (lg) { setLangOverride(LANG === "it" ? "en" : "it"); location.reload(); return; }
     if (e.target.closest('[data-a="close"]') || e.target === sh) {
       sh.remove();
       if ($(".home")) renderHome();          // aggiorna badge e sottotitolo se siamo in home

@@ -48,6 +48,11 @@ header.hero{
 .navlinks a{color:var(--soft);text-decoration:none}
 .navlinks a:hover{color:var(--ink)}
 @media(max-width:640px){.navlinks{display:none}}
+.langbtn{
+  display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--soft);background:transparent;
+  color:var(--ink);font-weight:800;font-size:14px;padding:8px 14px;border-radius:999px;cursor:pointer;
+}
+.langbtn:hover{border-color:var(--ink)}
 
 .herogrid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,5vw,56px);align-items:center;padding-bottom:clamp(44px,8vw,90px)}
 @media(max-width:860px){.herogrid{grid-template-columns:1fr}}
@@ -155,6 +160,7 @@ footer a{color:var(--soft)}
         <a href="#privacy" data-i18n="nav_privacy">Privacy</a>
         <a href="#uso" data-i18n="nav_use">Come si usa</a>
       </div>
+      <button id="langBtn" class="langbtn" type="button">EN</button>
       <a class="cta" href="giocamente.html" data-i18n="cta_play">▶ Gioca ora</a>
     </nav>
 
@@ -353,10 +359,36 @@ footer a{color:var(--soft)}
 
 <script>
 /* Lingua: la pagina è scritta in italiano; se il dispositivo non è
-   in italiano, i testi marcati con data-i18n passano all'inglese. */
+   in italiano, i testi marcati con data-i18n passano all'inglese.
+   Un interruttore manuale (bottone IT/EN in nav) forza la scelta,
+   sovrascrivendo il rilevamento automatico; la preferenza è condivisa
+   con giocamente.html tramite localStorage. */
 (function () {
-  var l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
-  if (l === "it" || l.indexOf("it-") === 0) return;
+  var LKEY = "giocamente_lang";
+
+  function detect() {
+    var l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
+    return (l === "it" || l.indexOf("it-") === 0) ? "it" : "en";
+  }
+  function getOverride() {
+    try {
+      var v = localStorage.getItem(LKEY);
+      return (v === "it" || v === "en") ? v : null;
+    } catch (e) { return null; }
+  }
+  var lang = getOverride() || detect();
+
+  var langBtn = document.getElementById("langBtn");
+  if (langBtn) {
+    langBtn.textContent = lang === "it" ? "EN" : "IT";
+    langBtn.setAttribute("aria-label", lang === "it" ? "Switch to English" : "Passa all'italiano");
+    langBtn.addEventListener("click", function () {
+      try { localStorage.setItem(LKEY, lang === "it" ? "en" : "it"); } catch (e) {}
+      location.reload();
+    });
+  }
+
+  if (lang === "it") return;
 
   var EN = {
     nav_games: "The three games",
