@@ -242,6 +242,98 @@ const pick    = a => a[rnd(a.length)];
 const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const range   = (a, b) => { const o = []; for (let i = a; i <= b; i++) o.push(i); return o; };
 
+/* =========================================================
+   1a. LINGUA — italiano se il dispositivo è in italiano,
+       inglese in tutti gli altri casi. Tutto il testo visibile
+       e parlato passa da T (STR[LANG]).
+   ========================================================= */
+const LANG = (() => {
+  const l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
+  return (l === "it" || l.indexOf("it-") === 0) ? "it" : "en";
+})();
+
+const STR = {
+  it: {
+    docTitle: "GiocaMente — giochi per la mente (3 anni)",
+    ariaHome: "Torna ai giochi", ariaRepeat: "Ripeti la richiesta", ariaGear: "Impostazioni (tieni premuto)",
+    speechLang: "it-IT", voiceName: /italian/i,
+    praise: ["Bravo!", "Benissimo!", "Sì, giusto!", "Perfetto!", "Che bravo!"],
+    tryAgain: "Prova ancora!",
+    lookHint: "Guarda, è questo che brilla!",
+    sayWinLocked: "Evviva! Hai finito. Questo gioco torna domani!",
+    sayWin: "Evviva! Hai finito. Sei stato bravissimo!",
+    yay: "Evviva!",
+    completed: t => "Hai completato " + t,
+    seeTomorrow: ". A domani!",
+    btnAgain: "🔁 Ancora", btnMore: "🏠 Altri giochi",
+    allDone: "Per oggi hai finito tutto! Torna domani 🌙",
+    tapAGame: "Tocca un gioco 👇",
+    doneBadge: "Fatto! A domani ⭐",
+    alreadyDone: "Questo l'hai già finito oggi, bravo! Torna domani.",
+    chooseGame: "Scegli un gioco",
+    voiceOn: "Voce attiva",
+    pTitle: "Area genitori", pSub: "Impostazioni",
+    pSounds: "🔉 Suoni", pVoice: "🗣️ Voce italiana",
+    pCap: "📅 Una partita al giorno per gioco",
+    pToday: (n, tot) => "🔓 Partite di oggi (" + n + "/" + tot + " fatte)",
+    pUnlock: "Sblocca", pUnlocked: "Sbloccate ✓",
+    pStars: "⭐ Stelle raccolte", pClose: "Chiudi",
+    pNote: 'Nulla viene inviato in rete. Sul dispositivo resta soltanto il registro delle partite di oggi, ' +
+      'che serve alla regola "una al giorno"; stelle e impostazioni audio si azzerano ricaricando la pagina. ' +
+      'Nessuna pubblicità, nessun link esterno, nessun acquisto.<br>' +
+      'La regola "una partita al giorno" chiude da sola la sessione dopo pochi minuti: se volete continuare, ' +
+      'usate "Sblocca" o spegnete l\'interruttore. Meglio se giocate accanto al bambino.',
+    matchTitle: "Trova l'uguale", matchPrompt: "Tocca quello uguale a questo!",
+    memoryTitle: "Le coppie", memoryPrompt: "Trova gli animali uguali!",
+    foundPrefix: ["Bravo, ", "Trovato! ", "Sì! "],
+    countTitle: "Quanti sono?",
+    numw: ["zero", "una", "due", "tre", "quattro", "cinque"],
+    countPrompt: (n, w, numw) => n === 1
+      ? "Tocca dove c'è " + w.one
+      : "Tocca dove ci sono " + numw[n] + " " + w.many
+  },
+  en: {
+    docTitle: "GiocaMente — games for the mind (age 3)",
+    ariaHome: "Back to the games", ariaRepeat: "Repeat the prompt", ariaGear: "Settings (press and hold)",
+    speechLang: "en-US", voiceName: /english/i,
+    praise: ["Well done!", "Great job!", "Yes, that's right!", "Perfect!", "Amazing!"],
+    tryAgain: "Try again!",
+    lookHint: "Look, it's the one that's glowing!",
+    sayWinLocked: "Hooray! You finished. This game comes back tomorrow!",
+    sayWin: "Hooray! You finished. You did great!",
+    yay: "Hooray!",
+    completed: t => "You completed " + t,
+    seeTomorrow: ". See you tomorrow!",
+    btnAgain: "🔁 Again", btnMore: "🏠 More games",
+    allDone: "You've finished everything for today! Come back tomorrow 🌙",
+    tapAGame: "Tap a game 👇",
+    doneBadge: "Done! See you tomorrow ⭐",
+    alreadyDone: "You already finished this one today, well done! Come back tomorrow.",
+    chooseGame: "Pick a game",
+    voiceOn: "Voice on",
+    pTitle: "Parents' area", pSub: "Settings",
+    pSounds: "🔉 Sounds", pVoice: "🗣️ Spoken voice",
+    pCap: "📅 One session per game per day",
+    pToday: (n, tot) => "🔓 Today's sessions (" + n + "/" + tot + " done)",
+    pUnlock: "Unlock", pUnlocked: "Unlocked ✓",
+    pStars: "⭐ Stars collected", pClose: "Close",
+    pNote: 'Nothing is sent over the network. The only thing kept on the device is today\'s play log, ' +
+      'used for the "one per day" rule; stars and audio settings reset when the page reloads. ' +
+      'No ads, no external links, no purchases.<br>' +
+      'The "one session per day" rule ends the session on its own after a few minutes: to keep playing, ' +
+      'use "Unlock" or turn the switch off. It\'s best to sit and play next to your child.',
+    matchTitle: "Find the match", matchPrompt: "Tap the one that matches this!",
+    memoryTitle: "The pairs", memoryPrompt: "Find the matching animals!",
+    foundPrefix: ["Well done, ", "Found it! ", "Yes! "],
+    countTitle: "How many?",
+    numw: ["zero", "one", "two", "three", "four", "five"],
+    countPrompt: (n, w, numw) => n === 1
+      ? "Tap where there is " + w.one
+      : "Tap where there are " + numw[n] + " " + w.many
+  }
+};
+const T = STR[LANG];
+
 /* Stato di sessione: stelle e impostazioni audio restano in memoria, si azzerano al reload. */
 const S = { stars: 0, sound: true, voice: true, token: null, resolve: null };
 
@@ -310,15 +402,16 @@ const Sound = {
 };
 
 /* =========================================================
-   3. VOCE — Web Speech API in italiano
+   3. VOCE — Web Speech API nella lingua rilevata
    ========================================================= */
 const Voice = {
   v: null, ok: ("speechSynthesis" in window),
   init() {
     if (!this.ok) return;
+    const langRe = new RegExp("^" + LANG + "[-_]?", "i");
     const grab = () => {
       const list = speechSynthesis.getVoices() || [];
-      this.v = list.find(x => /^it[-_]/i.test(x.lang)) || list.find(x => /italian/i.test(x.name)) || null;
+      this.v = list.find(x => langRe.test(x.lang)) || list.find(x => T.voiceName.test(x.name)) || null;
     };
     grab();
     speechSynthesis.addEventListener("voiceschanged", grab);
@@ -328,7 +421,7 @@ const Voice = {
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = "it-IT"; if (this.v) u.voice = this.v;
+      u.lang = T.speechLang; if (this.v) u.voice = this.v;
       u.rate = .92; u.pitch = 1.15; u.volume = 1;
       speechSynthesis.speak(u);
     } catch (e) { /* voce non disponibile: si continua coi soli suoni */ }
@@ -412,16 +505,16 @@ function makeCtx(game, level, round, total, resolve) {
           Sound.good(); FX.stamp("⭐");
           node.classList.add("right");
           choices.forEach(c => { c.node.classList.remove("hint"); if (c.node !== node) c.node.classList.add("dim"); });
-          Voice.say(pick(["Bravo!", "Benissimo!", "Sì, giusto!", "Perfetto!", "Che bravo!"]));
+          Voice.say(pick(T.praise));
           setTimeout(() => ctx.solved(), 950);
         } else {
           wrongs++;
           Sound.nope();
           node.classList.remove("wrong"); void node.offsetWidth; node.classList.add("wrong");
-          if (wrongs === 1) Voice.say("Prova ancora!");
+          if (wrongs === 1) Voice.say(T.tryAgain);
           if (wrongs >= 2) {   // nessun fallimento: dopo 2 tentativi si accende l'aiuto
             choices.filter(c => c.isCorrect).forEach(c => c.node.classList.add("hint"));
-            if (wrongs === 2) Voice.say("Guarda, è questo che brilla!");
+            if (wrongs === 2) Voice.say(T.lookHint);
           }
         }
       });
@@ -474,14 +567,14 @@ function celebrate(game) {
   Daily.markPlayed(game.id);
   const locked = Daily.isLocked(game.id);      // false se il cap è disattivato dai genitori
   Sound.win(); FX.confetti(70);
-  Voice.say(locked ? "Evviva! Hai finito. Questo gioco torna domani!" : "Evviva! Hai finito. Sei stato bravissimo!");
+  Voice.say(locked ? T.sayWinLocked : T.sayWin);
   const sh = mk("div", "sheet");
   sh.innerHTML =
     '<div class="sheetbox">' +
       '<div style="font-size:clamp(60px,16vmin,120px)">🎉</div>' +
-      '<h2>Evviva!</h2><p>Hai completato ' + game.title + (locked ? ". A domani!" : "") + '</p>' +
-      (locked ? '' : '<button class="bigbtn a" data-a="again">🔁 Ancora</button>') +
-      '<button class="bigbtn b" data-a="home">🏠 Altri giochi</button>' +
+      '<h2>' + T.yay + '</h2><p>' + T.completed(game.title) + (locked ? T.seeTomorrow : "") + '</p>' +
+      (locked ? '' : '<button class="bigbtn a" data-a="again">' + T.btnAgain + '</button>') +
+      '<button class="bigbtn b" data-a="home">' + T.btnMore + '</button>' +
     '</div>';
   sh.addEventListener("click", e => {
     const b = e.target.closest("[data-a]"); if (!b) return;
@@ -500,20 +593,20 @@ function renderHome() {
   const allDone = KidBrain.games.every(g => Daily.isLocked(g.id));
   const wrap = mk("div", "home",
     '<h1 class="logo">GiocaMente</h1><p class="sub">' +
-    (allDone ? "Per oggi hai finito tutto! Torna domani 🌙" : "Tocca un gioco 👇") +
+    (allDone ? T.allDone : T.tapAGame) +
     '</p><div class="gamegrid"></div>');
   const grid = wrap.querySelector(".gamegrid");
   KidBrain.games.forEach(g => {
     const locked = Daily.isLocked(g.id);
     const t = mk("button", "gtile",
       '<span class="em">' + g.icon + '</span><span class="nm">' + g.title + '</span>' +
-      (locked ? '<span class="done">Fatto! A domani ⭐</span>' : ''));
+      (locked ? '<span class="done">' + T.doneBadge + '</span>' : ''));
     t.style.setProperty("--tint", g.tint);
     if (locked) t.classList.add("played");
     t.addEventListener("click", () => {
       if (Daily.isLocked(g.id)) {
         Sound.tap();
-        Voice.say("Questo l'hai già finito oggi, bravo! Torna domani.");
+        Voice.say(T.alreadyDone);
         return;
       }
       Sound.tap(); startGame(g);
@@ -543,7 +636,7 @@ const COLORS = [
 const svgShape = (s, h) => '<svg viewBox="0 0 100 100" fill="' + h + '">' + SHAPES[s] + '</svg>';
 
 KidBrain.register({
-  id: "match", title: "Trova l'uguale", icon: "🔷", tint: "var(--c2)", rounds: 5,
+  id: "match", title: T.matchTitle, icon: "🔷", tint: "var(--c2)", rounds: 5,
   playRound(ctx) {
     const shapes = shuffle(Object.keys(SHAPES));
     const cols = shuffle(COLORS);
@@ -574,7 +667,7 @@ KidBrain.register({
     });
     ctx.el.appendChild(model);
     ctx.el.appendChild(row);
-    ctx.prompt("Tocca quello uguale a questo!");
+    ctx.prompt(T.matchPrompt);
   }
 });
 
@@ -582,14 +675,14 @@ KidBrain.register({
    7. GIOCO 2 — Memory a coppie
    ========================================================= */
 const ANIMALS = [
-  { e: "🐶", art: "il", n: "cane" }, { e: "🐱", art: "il", n: "gatto" }, { e: "🐰", art: "il", n: "coniglio" },
-  { e: "🐸", art: "la", n: "rana" }, { e: "🐼", art: "il", n: "panda" }, { e: "🦁", art: "il", n: "leone" },
-  { e: "🐷", art: "il", n: "maialino" }, { e: "🐵", art: "la", n: "scimmia" }, { e: "🐔", art: "la", n: "gallina" },
-  { e: "🦊", art: "la", n: "volpe" }
+  { e: "🐶", it: "il cane", en: "the dog" }, { e: "🐱", it: "il gatto", en: "the cat" }, { e: "🐰", it: "il coniglio", en: "the rabbit" },
+  { e: "🐸", it: "la rana", en: "the frog" }, { e: "🐼", it: "il panda", en: "the panda" }, { e: "🦁", it: "il leone", en: "the lion" },
+  { e: "🐷", it: "il maialino", en: "the piglet" }, { e: "🐵", it: "la scimmia", en: "the monkey" }, { e: "🐔", it: "la gallina", en: "the hen" },
+  { e: "🦊", it: "la volpe", en: "the fox" }
 ];
 
 KidBrain.register({
-  id: "memory", title: "Le coppie", icon: "🐼", tint: "var(--c4)", rounds: 3,
+  id: "memory", title: T.memoryTitle, icon: "🐼", tint: "var(--c4)", rounds: 3,
   playRound(ctx) {
     const pairs = ctx.level >= 3 ? 4 : 3;
     const set = shuffle(ANIMALS).slice(0, pairs);
@@ -619,7 +712,7 @@ KidBrain.register({
           setTimeout(() => {
             [x, y].forEach(c => { c.classList.remove("up"); c.classList.add("done"); });
             Sound.good(); FX.stamp(a.e);
-            Voice.say(pick(["Bravo, ", "Trovato! ", "Sì! "]) + a.art + " " + a.n + "!");
+            Voice.say(pick(T.foundPrefix) + a[LANG] + "!");
             open = []; busy = false; found++;
             if (found === pairs) setTimeout(() => ctx.solved(), 700);
           }, 380);
@@ -634,7 +727,7 @@ KidBrain.register({
     });
 
     ctx.el.appendChild(grid);
-    ctx.prompt("Trova gli animali uguali!");
+    ctx.prompt(T.memoryPrompt);
   }
 });
 
@@ -642,15 +735,18 @@ KidBrain.register({
    8. GIOCO 3 — Conta le quantità (1-3, poi 1-5)
    ========================================================= */
 const THINGS = [
-  { e: "🍎", art: "una", one: "mela", many: "mele" }, { e: "⚽", art: "una", one: "palla", many: "palle" },
-  { e: "🌸", art: "un", one: "fiore", many: "fiori" }, { e: "🐟", art: "un", one: "pesce", many: "pesci" },
-  { e: "⭐", art: "una", one: "stella", many: "stelle" }, { e: "🍌", art: "una", one: "banana", many: "banane" },
-  { e: "🚗", art: "una", one: "macchina", many: "macchine" }, { e: "🦋", art: "una", one: "farfalla", many: "farfalle" }
+  { e: "🍎", it: { one: "una mela", many: "mele" }, en: { one: "an apple", many: "apples" } },
+  { e: "⚽", it: { one: "una palla", many: "palle" }, en: { one: "a ball", many: "balls" } },
+  { e: "🌸", it: { one: "un fiore", many: "fiori" }, en: { one: "a flower", many: "flowers" } },
+  { e: "🐟", it: { one: "un pesce", many: "pesci" }, en: { one: "a fish", many: "fish" } },
+  { e: "⭐", it: { one: "una stella", many: "stelle" }, en: { one: "a star", many: "stars" } },
+  { e: "🍌", it: { one: "una banana", many: "banane" }, en: { one: "a banana", many: "bananas" } },
+  { e: "🚗", it: { one: "una macchina", many: "macchine" }, en: { one: "a car", many: "cars" } },
+  { e: "🦋", it: { one: "una farfalla", many: "farfalle" }, en: { one: "a butterfly", many: "butterflies" } }
 ];
-const NUMW = ["zero", "una", "due", "tre", "quattro", "cinque"];
 
 KidBrain.register({
-  id: "count", title: "Quanti sono?", icon: "🍎", tint: "var(--c3)", rounds: 5,
+  id: "count", title: T.countTitle, icon: "🍎", tint: "var(--c3)", rounds: 5,
   playRound(ctx) {
     const max = ctx.level === 1 ? 3 : (ctx.level === 2 ? 4 : 5);
     const thing = pick(THINGS);
@@ -677,10 +773,7 @@ KidBrain.register({
 
     ctx.el.appendChild(model);
     ctx.el.appendChild(row);
-    const txt = target === 1
-      ? "Tocca dove c'è " + thing.art + " " + thing.one
-      : "Tocca dove ci sono " + NUMW[target] + " " + thing.many;
-    ctx.prompt(txt);
+    ctx.prompt(T.countPrompt(target, thing[LANG], T.numw));
   }
 });
 
@@ -692,19 +785,15 @@ function openParents() {
   const sh = mk("div", "sheet");
   sh.innerHTML =
     '<div class="sheetbox">' +
-      '<h2>Area genitori</h2><p>Impostazioni</p>' +
-      '<div class="optrow"><span>🔉 Suoni</span><button class="sw' + (S.sound ? " on" : "") + '" data-t="sound"></button></div>' +
-      '<div class="optrow"><span>🗣️ Voce italiana</span><button class="sw' + (S.voice ? " on" : "") + '" data-t="voice"></button></div>' +
-      '<div class="optrow"><span>📅 Una partita al giorno per gioco</span><button class="sw' + (d.cap ? " on" : "") + '" data-t="cap"></button></div>' +
-      '<div class="optrow"><span>🔓 Partite di oggi (' + d.played.length + '/' + KidBrain.games.length + ' fatte)</span>' +
-        '<button class="bigbtn b" data-a="unlock" style="min-width:0;min-height:0;padding:10px 18px;font-size:16px;margin:0">Sblocca</button></div>' +
-      '<div class="optrow"><span>⭐ Stelle raccolte</span><b>' + S.stars + '</b></div>' +
-      '<div style="margin-top:18px"><button class="bigbtn b" data-a="close">Chiudi</button></div>' +
-      '<div class="note">Nulla viene inviato in rete. Sul dispositivo resta soltanto il registro delle partite di oggi, ' +
-      'che serve alla regola "una al giorno"; stelle e impostazioni audio si azzerano ricaricando la pagina. ' +
-      'Nessuna pubblicità, nessun link esterno, nessun acquisto.<br>' +
-      'La regola "una partita al giorno" chiude da sola la sessione dopo pochi minuti: se volete continuare, ' +
-      'usate "Sblocca" o spegnete l\'interruttore. Meglio se giocate accanto al bambino.</div>' +
+      '<h2>' + T.pTitle + '</h2><p>' + T.pSub + '</p>' +
+      '<div class="optrow"><span>' + T.pSounds + '</span><button class="sw' + (S.sound ? " on" : "") + '" data-t="sound"></button></div>' +
+      '<div class="optrow"><span>' + T.pVoice + '</span><button class="sw' + (S.voice ? " on" : "") + '" data-t="voice"></button></div>' +
+      '<div class="optrow"><span>' + T.pCap + '</span><button class="sw' + (d.cap ? " on" : "") + '" data-t="cap"></button></div>' +
+      '<div class="optrow"><span>' + T.pToday(d.played.length, KidBrain.games.length) + '</span>' +
+        '<button class="bigbtn b" data-a="unlock" style="min-width:0;min-height:0;padding:10px 18px;font-size:16px;margin:0">' + T.pUnlock + '</button></div>' +
+      '<div class="optrow"><span>' + T.pStars + '</span><b>' + S.stars + '</b></div>' +
+      '<div style="margin-top:18px"><button class="bigbtn b" data-a="close">' + T.pClose + '</button></div>' +
+      '<div class="note">' + T.pNote + '</div>' +
     '</div>';
   sh.addEventListener("click", e => {
     const t = e.target.closest("[data-t]");
@@ -717,12 +806,12 @@ function openParents() {
       }
       S[k] = !S[k]; t.classList.toggle("on", S[k]);
       if (k === "sound" && S.sound) Sound.tap();
-      if (k === "voice" && S.voice) Voice.say("Voce attiva");
+      if (k === "voice" && S.voice) Voice.say(T.voiceOn);
       if (k === "voice" && !S.voice) Voice.stop();
       return;
     }
     const u = e.target.closest('[data-a="unlock"]');
-    if (u) { Daily.unlockToday(); u.textContent = "Sbloccate ✓"; u.disabled = true; return; }
+    if (u) { Daily.unlockToday(); u.textContent = T.pUnlocked; u.disabled = true; return; }
     if (e.target.closest('[data-a="close"]') || e.target === sh) {
       sh.remove();
       if ($(".home")) renderHome();          // aggiorna badge e sottotitolo se siamo in home
@@ -735,6 +824,12 @@ function openParents() {
    10. BOOT
    ========================================================= */
 (function boot() {
+  document.documentElement.lang = LANG;
+  document.title = T.docTitle;
+  $("#btnHome").setAttribute("aria-label", T.ariaHome);
+  $("#btnRepeat").setAttribute("aria-label", T.ariaRepeat);
+  $("#btnGear").setAttribute("aria-label", T.ariaGear);
+
   Voice.init();
   document.addEventListener("contextmenu", e => e.preventDefault());          // niente menu su pressione lunga
   document.addEventListener("gesturestart", e => e.preventDefault());         // niente pinch-zoom iOS
@@ -743,7 +838,7 @@ function openParents() {
   $("#btnHome").addEventListener("click", () => { Sound.tap(); renderHome(); });
   $("#btnRepeat").addEventListener("click", () => {
     const p = $("#prompt");
-    if (p && p.textContent) Voice.say(p.textContent); else Voice.say("Scegli un gioco");
+    if (p && p.textContent) Voice.say(p.textContent); else Voice.say(T.chooseGame);
   });
 
   const gear = $("#btnGear");
