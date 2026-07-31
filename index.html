@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fff7ed">
+<title>GiocaMente — giochi per la mente, pensati per i 3 anni</title>
+<meta name="description" content="Tre mini-giochi cognitivi in italiano per bambini di 3 anni. Progettati sulle evidenze di sviluppo motorio e cognitivo dell'età prescolare. Nessun dato raccolto, nessuna pubblicità, nessun acquisto.">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:Nunito,"Trebuchet MS",Avenir,system-ui,sans-serif;color:#2b2118;line-height:1.6;
+  background:#fff7ed;-webkit-font-smoothing:antialiased;
+}
+:root{
+  --c1:#ffb703;--c2:#3aa8ff;--c3:#34d399;--c4:#f76c8c;--c5:#a78bfa;--c6:#fb8500;
+  --ink:#2b2118;--soft:#6b5f52;--line:rgba(43,33,24,.12);
+  --shadow:0 10px 0 rgba(0,0,0,.06),0 18px 34px rgba(0,0,0,.09);
+}
+.wrap{width:min(1080px,92vw);margin-inline:auto}
+section{padding:clamp(48px,8vw,96px) 0}
+h1,h2,h3{line-height:1.15;margin:0 0 .4em;letter-spacing:-.01em}
+h2{font-size:clamp(26px,4.4vw,42px);font-weight:900}
+h3{font-size:clamp(19px,2.4vw,24px);font-weight:800}
+p{margin:0 0 1em}
+.lead{font-size:clamp(17px,2.1vw,21px);color:var(--soft);max-width:62ch}
+.eyebrow{
+  display:inline-block;font-size:13px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--c6);background:#fff2d9;border-radius:999px;padding:7px 16px;margin-bottom:18px
+}
+
+/* ---------- hero ---------- */
+header.hero{
+  background:
+    radial-gradient(1000px 620px at 12% -20%, #ffe4b8 0%, transparent 62%),
+    radial-gradient(880px 560px at 108% 8%, #cfeaff 0%, transparent 58%),
+    #fff7ed;
+  border-bottom:1px solid var(--line);padding-top:clamp(28px,5vw,54px)
+}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:clamp(28px,6vw,64px)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px}
+.brand .dot{
+  width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:21px;
+  background:linear-gradient(140deg,var(--c1),var(--c6));box-shadow:var(--shadow)
+}
+.navlinks{display:flex;gap:22px;font-weight:700;font-size:15px}
+.navlinks a{color:var(--soft);text-decoration:none}
+.navlinks a:hover{color:var(--ink)}
+@media(max-width:640px){.navlinks{display:none}}
+
+.herogrid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,5vw,56px);align-items:center;padding-bottom:clamp(44px,8vw,90px)}
+@media(max-width:860px){.herogrid{grid-template-columns:1fr}}
+h1{font-size:clamp(34px,6.2vw,60px);font-weight:900}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--c4),var(--c6),var(--c1));-webkit-background-clip:text;background-clip:text;color:transparent}
+.cta{
+  display:inline-flex;align-items:center;gap:10px;border:0;cursor:pointer;text-decoration:none;
+  background:var(--c3);color:#fff;font-weight:900;font-size:clamp(17px,2vw,20px);
+  padding:18px 30px;border-radius:18px;box-shadow:var(--shadow);transition:transform .12s ease
+}
+.cta:active{transform:translateY(3px)}
+.cta.ghost{background:#fff;color:var(--ink)}
+.ctarow{display:flex;flex-wrap:wrap;gap:14px;margin-top:26px}
+.microcopy{font-size:14px;color:var(--soft);margin-top:14px}
+
+/* mock del gioco */
+.mock{
+  background:#fff;border-radius:28px;box-shadow:var(--shadow);padding:18px;border:1px solid var(--line);
+}
+.mockbar{background:#fff7ed;border-radius:16px;padding:12px 16px;font-weight:900;font-size:16px;margin-bottom:16px;border:1px solid var(--line)}
+.mockmodel{
+  width:clamp(60px,8vw,84px);aspect-ratio:1;margin:0 auto 14px;border-radius:18px;
+  background:#fffdf5;border:4px dashed rgba(43,33,24,.18);display:grid;place-items:center;padding:10px
+}
+.mockmodel svg{width:100%;height:100%}
+.mocktiles{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.mocktile{
+  width:clamp(74px,11vw,104px);aspect-ratio:1;border-radius:20px;background:#fff;
+  border:1px solid var(--line);box-shadow:0 6px 0 rgba(0,0,0,.05);display:grid;place-items:center
+}
+.mocktile.sel{border:4px solid var(--c1)}
+.mocktile svg{width:66%;height:66%}
+.mockfoot{display:flex;justify-content:center;gap:8px;margin-top:16px}
+.mockfoot i{width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,.12)}
+.mockfoot i.on{background:var(--c1)}
+
+/* ---------- griglie ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:clamp(16px,2.4vw,26px)}
+.card{
+  background:#fff;border:1px solid var(--line);border-radius:24px;padding:clamp(20px,3vw,30px);
+  box-shadow:var(--shadow);border-bottom:6px solid var(--tint,var(--c1))
+}
+.card .ico{font-size:40px;line-height:1;margin-bottom:10px}
+.card p{color:var(--soft);margin-bottom:.7em}
+.tagline{
+  display:inline-block;font-size:13px;font-weight:800;color:var(--ink);
+  background:#fff7ed;border:1px solid var(--line);border-radius:999px;padding:5px 12px
+}
+
+/* ---------- tabella evidenze ---------- */
+.ev{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
+.evrow{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--line)}
+.evrow:last-child{border-bottom:0}
+.evrow>div{padding:clamp(16px,2.4vw,24px)}
+.evrow>div:first-child{background:#fffaf1;border-right:1px solid var(--line)}
+.evrow b{display:block;font-size:15px;margin-bottom:4px}
+.evrow span{font-size:15px;color:var(--soft)}
+.evhead{font-weight:900;background:#fff2d9 !important;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+@media(max-width:720px){
+  .evrow{grid-template-columns:1fr}
+  .evrow>div:first-child{border-right:0;border-bottom:1px solid var(--line)}
+  .evrow.evhead-row{display:none}
+}
+
+/* ---------- lista privacy ---------- */
+.nope{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:24px}
+.nope div{
+  background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px;
+  font-weight:700;display:flex;gap:10px;align-items:flex-start
+}
+.nope span{color:var(--c3);font-size:20px;line-height:1.2}
+
+/* ---------- come si usa ---------- */
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:clamp(16px,2.4vw,26px)}
+.step{background:#fff;border:1px solid var(--line);border-radius:24px;padding:26px;box-shadow:var(--shadow);position:relative}
+.step::before{
+  counter-increment:s;content:counter(s);position:absolute;top:-16px;left:26px;
+  width:40px;height:40px;border-radius:14px;background:var(--c2);color:#fff;font-weight:900;
+  display:grid;place-items:center;box-shadow:var(--shadow)
+}
+.step h3{margin-top:12px}
+.step p{color:var(--soft);margin:0}
+
+/* ---------- fine ---------- */
+.final{
+  background:linear-gradient(150deg,#fff2d9,#ffe4f0 60%,#d9f0ff);
+  border-radius:32px;padding:clamp(30px,6vw,64px);text-align:center;border:1px solid var(--line)
+}
+footer{border-top:1px solid var(--line);padding:36px 0 60px;font-size:14px;color:var(--soft)}
+footer a{color:var(--soft)}
+.src{font-size:14px;color:var(--soft);margin-top:18px;line-height:1.7}
+.src a{color:var(--c6);text-decoration:none;border-bottom:1px solid rgba(251,133,0,.35)}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <nav class="nav">
+      <div class="brand"><span class="dot">🧠</span> GiocaMente</div>
+      <div class="navlinks">
+        <a href="#giochi">I tre giochi</a>
+        <a href="#evidenze">Perché così</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#uso">Come si usa</a>
+      </div>
+      <a class="cta" href="giocamente.html">▶ Gioca ora</a>
+    </nav>
+
+    <div class="herogrid">
+      <div>
+        <span class="eyebrow">Per bambini di 3 anni</span>
+        <h1>Tre minuti di gioco.<br><em>Zero frustrazione.</em></h1>
+        <p class="lead">
+          GiocaMente è una piccola raccolta di giochi cognitivi in italiano, progettata attorno a
+          ciò che un bambino di tre anni sa davvero fare: toccare, riconoscere, ricordare.
+          Niente da leggere, niente da trascinare, niente cronometri. E nessun modo di perdere.
+        </p>
+        <div class="ctarow">
+          <a class="cta" href="giocamente.html">▶ Gioca ora</a>
+          <a class="cta ghost" href="#evidenze">Come è stato progettato</a>
+        </div>
+        <p class="microcopy">Funziona offline · Nessuna installazione · Nessun account · Gratis</p>
+      </div>
+
+      <div class="mock" aria-hidden="true">
+        <div class="mockbar">🔊 Tocca quello uguale a questo!</div>
+        <div class="mockmodel"><svg viewBox="0 0 100 100" fill="#3b82f6"><circle cx="50" cy="50" r="42"/></svg></div>
+        <div class="mocktiles">
+          <div class="mocktile"><svg viewBox="0 0 100 100" fill="#3b82f6"><polygon points="50,8 94,90 6,90"/></svg></div>
+          <div class="mocktile sel"><svg viewBox="0 0 100 100" fill="#3b82f6"><circle cx="50" cy="50" r="42"/></svg></div>
+          <div class="mocktile"><svg viewBox="0 0 100 100" fill="#3b82f6"><rect x="10" y="10" width="80" height="80" rx="12"/></svg></div>
+        </div>
+        <div class="mockfoot"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ I TRE GIOCHI ============ -->
+<section id="giochi">
+  <div class="wrap">
+    <span class="eyebrow">Cosa allena</span>
+    <h2>Tre giochi, tre abilità diverse</h2>
+    <p class="lead" style="margin-bottom:34px">
+      Ogni gioco ha tre livelli che salgono da soli durante la partita, senza che il bambino
+      debba scegliere nulla. Una partita dura fra i due e i quattro minuti.
+    </p>
+
+    <div class="cards">
+      <div class="card" style="--tint:var(--c2)">
+        <div class="ico">🔷</div>
+        <h3>Trova l'uguale</h3>
+        <p>Un modello in alto, tre alternative sotto. Prima cambia solo la forma, poi solo il colore, infine entrambi insieme.</p>
+        <span class="tagline">Discriminazione percettiva · attenzione selettiva</span>
+      </div>
+      <div class="card" style="--tint:var(--c4)">
+        <div class="ico">🐼</div>
+        <h3>Le coppie</h3>
+        <p>Memory con tre coppie di animali, quattro all'ultimo livello. Le carte sbagliate restano scoperte a lungo: c'è tutto il tempo di guardarle.</p>
+        <span class="tagline">Memoria di lavoro visuo-spaziale</span>
+      </div>
+      <div class="card" style="--tint:var(--c3)">
+        <div class="ico">🍎</div>
+        <h3>Quanti sono?</h3>
+        <p>La richiesta è parlata e accompagnata da pallini, così la quantità si vede anche senza saper leggere i numeri. Si parte da 1-3, il campo in cui a tre anni si riconosce “a colpo d'occhio”.</p>
+        <span class="tagline">Cardinalità · corrispondenza uno-a-uno</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EVIDENZE ============ -->
+<section id="evidenze" style="background:#fffdf7;border-block:1px solid var(--line)">
+  <div class="wrap">
+    <span class="eyebrow">Perché è fatto così</span>
+    <h2>Ogni scelta risponde a un dato</h2>
+    <p class="lead" style="margin-bottom:34px">
+      A tre anni le dita sono piccole, la mira è imprecisa e la pazienza è breve. Quasi tutti i giochi
+      “per bambini” sono in realtà giochi per adulti rimpiccioliti. Qui è il contrario: prima il vincolo, poi il gioco.
+    </p>
+
+    <div class="ev">
+      <div class="evrow evhead-row"><div class="evhead">Cosa dice la ricerca</div><div class="evhead">Cosa abbiamo fatto</div></div>
+
+      <div class="evrow">
+        <div><b>Con bersagli da 7-10 mm i bambini sbagliano il tocco circa il 30% delle volte; a tre anni il dito cade in media 4,5 mm fuori dal centro.</b><span>Vatavu et al., 2015</span></div>
+        <div><b>Bersagli enormi, mai sotto i 2 cm.</b><span>Le tessere misurano da 2,8 cm su telefono a 5 cm su tablet, con spazio abbondante fra una e l'altra.</span></div>
+      </div>
+
+      <div class="evrow">
+        <div><b>Il trascinamento a due dita riesce solo nel 27% dei casi su tablet; il drag di precisione è oltre le capacità motorie dell'età.</b><span>Vatavu et al., 2015 · Nielsen Norman Group</span></div>
+        <div><b>Si gioca solo toccando.</b><span>Nessun trascinamento, nessun doppio tocco, nessun gesto a due dita. Una mano sola basta sempre.</span></div>
+      </div>
+
+      <div class="evrow">
+        <div><b>Un bambino di tre anni può impiegare fino a 5 secondi per completare un singolo tocco.</b><span>Vatavu et al., 2015</span></div>
+        <div><b>Nessun cronometro.</b><span>Il gioco aspetta. Non esistono turni scaduti, punteggi che calano o partite perse per lentezza.</span></div>
+      </div>
+
+      <div class="evrow">
+        <div><b>Nella fase preoperatoria la memoria di lavoro è molto limitata: meglio prevenire l'errore che chiedere di ripararlo.</b><span>Nielsen Norman Group, <i>Designing for Kids: Cognitive Considerations</i></span></div>
+        <div><b>Al massimo tre scelte, quattro solo all'ultimo livello.</b><span>E dopo due tentativi sbagliati la risposta giusta comincia a brillare da sola: si va avanti sempre.</span></div>
+      </div>
+
+      <div class="evrow">
+        <div><b>I bambini piccoli non colgono i segnali sottili: il riscontro deve essere esagerato e multisensoriale.</b><span>Nielsen Norman Group</span></div>
+        <div><b>Risposta giusta = stella a tutto schermo, suono e voce.</b><span>Il suono dell'errore è morbido e discendente, mai un “buzz” punitivo.</span></div>
+      </div>
+
+      <div class="evrow">
+        <div><b>A tre anni non si legge: le istruzioni scritte sono inutili.</b><span>Nielsen Norman Group</span></div>
+        <div><b>Tutto è parlato, in italiano.</b><span>Ogni richiesta viene pronunciata dalla voce del dispositivo e si può riascoltare col tasto 🔊. Il testo c'è, ma è per l'adulto accanto.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRIVACY ============ -->
+<section id="privacy">
+  <div class="wrap">
+    <span class="eyebrow">Cosa non c'è</span>
+    <h2>Un gioco che non chiede niente</h2>
+    <p class="lead">
+      È una singola pagina web. Si apre, si gioca, si chiude. Non c'è un server dietro,
+      non c'è un account, non c'è nulla da controllare prima di lasciarlo in mano a un bambino.
+    </p>
+    <div class="nope">
+      <div><span>✓</span> Nessun dato raccolto o inviato</div>
+      <div><span>✓</span> Nessuna pubblicità</div>
+      <div><span>✓</span> Nessun acquisto, in nessuna forma</div>
+      <div><span>✓</span> Nessun link che porti fuori dal gioco</div>
+      <div><span>✓</span> Nessuna registrazione, nessuna email</div>
+      <div><span>✓</span> Funziona anche senza connessione, dalla seconda visita</div>
+    </div>
+    <p class="microcopy" style="margin-top:22px">
+      Sul dispositivo resta un unico dato: il registro delle partite di oggi, che serve alla regola
+      "una al giorno". Non lascia il dispositivo e non identifica nessuno. Le stelle e le impostazioni
+      audio invece si azzerano ricaricando — a tre anni un punteggio che si accumula nel tempo non motiva,
+      ma può far pesare le sessioni brevi.
+    </p>
+  </div>
+</section>
+
+<!-- ============ COME SI USA ============ -->
+<section id="uso" style="background:#fffdf7;border-block:1px solid var(--line)">
+  <div class="wrap">
+    <span class="eyebrow">Come si usa</span>
+    <h2>Poco, insieme, senza fretta</h2>
+    <p class="lead">
+      Di serie ogni gioco si può completare <b>una sola volta al giorno</b>, come i puzzle quotidiani dei giornali:
+      la sessione finisce da sola dopo pochi minuti, senza negoziare lo stop. Dall'area genitori si può
+      sbloccare la giornata o disattivare del tutto la regola.
+    </p>
+    <div class="steps" style="margin-top:40px">
+      <div class="step">
+        <h3>Apri e passa il dispositivo</h3>
+        <p>Nessun menu da attraversare: la schermata iniziale è già la scelta del gioco, con tre grandi tessere illustrate.</p>
+      </div>
+      <div class="step">
+        <h3>Restate vicini</h3>
+        <p>A questa età il rinforzo che conta è quello di un adulto, non quello dello schermo. Cinque-dieci minuti seduti accanto valgono più di mezz'ora da soli.</p>
+      </div>
+      <div class="step">
+        <h3>Area genitori</h3>
+        <p>Tieni premuta l'icona ⚙️ per circa un secondo: si aprono i comandi di suoni e voce. È una soglia che un bambino di tre anni non mantiene, quindi non ci finisce per sbaglio.</p>
+      </div>
+      <div class="step">
+        <h3>Se la voce non parte</h3>
+        <p>Il parlato usa le voci italiane già presenti nel dispositivo. Se mancano, il gioco continua a funzionare con i soli suoni: nulla si rompe.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA FINALE ============ -->
+<section>
+  <div class="wrap">
+    <div class="final">
+      <div style="font-size:clamp(50px,10vw,86px);line-height:1">🧠</div>
+      <h2>Provalo adesso</h2>
+      <p class="lead" style="margin-inline:auto">Si apre in un istante e non chiede nulla in cambio.</p>
+      <div class="ctarow" style="justify-content:center">
+        <a class="cta" href="giocamente.html">▶ Gioca ora</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand" style="font-size:18px;margin-bottom:10px"><span class="dot" style="width:30px;height:30px;font-size:17px;border-radius:10px">🧠</span> GiocaMente</div>
+    <p>Giochi cognitivi in italiano per bambini di tre anni. Nessun dato raccolto.</p>
+    <div class="src">
+      <b>Fonti citate in questa pagina</b><br>
+      Vatavu, Cramariuc &amp; Schipor — <a href="https://mintviz.usv.ro/publications/ijhcs2015.pdf" target="_blank" rel="noopener">Touch interaction for children aged 3 to 6 years</a>, International Journal of Human-Computer Studies, 2015<br>
+      Nielsen Norman Group — <a href="https://www.nngroup.com/articles/children-ux-physical-development/" target="_blank" rel="noopener">Design for Kids Based on Their Stage of Physical Development</a><br>
+      Nielsen Norman Group — <a href="https://www.nngroup.com/articles/kids-cognition/" target="_blank" rel="noopener">Designing for Kids: Cognitive Considerations</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+if ("serviceWorker" in navigator && location.protocol === "https:")
+  navigator.serviceWorker.register("sw.js").catch(function(){});
+</script>
+</body>
+</html>
