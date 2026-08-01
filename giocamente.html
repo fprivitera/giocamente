@@ -846,7 +846,12 @@ async function startGame(game) {
     if (S.token !== token) return;
     drawDots(i, total);
     $("#play").innerHTML = "";
-    const level = Math.max(Profile.minLevel(), Math.min(3, 1 + Math.floor(i / Math.ceil(total / 3))));
+    /* Un semplice Math.max(minLevel, ...) appiattirebbe la partita a un solo
+       livello quando minLevel > 1: qui invece si ridistribuiscono i round
+       sui livelli restanti (minLevel..3), così la difficoltà sale ancora
+       durante la partita anche partendo più avanti. */
+    const minLevel = Profile.minLevel(), span = 4 - minLevel;
+    const level = Math.min(3, minLevel + Math.floor(i / Math.ceil(total / span)));
     await new Promise(res => {
       S.resolve = res;
       game.playRound(makeCtx(game, level, i, total, res));
