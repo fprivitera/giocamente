@@ -315,7 +315,7 @@ body{
     <button id="btnRepeat" class="iconbtn" aria-label="Ripeti la richiesta">🔊</button>
     <div id="stars">⭐ <span id="starcount">0</span></div>
     <button id="btnLang" class="iconbtn lang" aria-label="Cambia lingua">EN</button>
-    <button id="btnGear" class="iconbtn" aria-label="Impostazioni (tieni premuto)">⚙️</button>
+    <button id="btnGear" class="iconbtn" aria-label="Impostazioni (tieni premuto per 1,2 secondi)">⚙️</button>
   </header>
   <main id="screen"></main>
 </div>
@@ -360,7 +360,7 @@ let LANG = LangPref.get() || detectLang();
 const STR = {
   it: {
     docTitle: "GiocaMente — giochi per la mente (3 anni)",
-    ariaHome: "Torna ai giochi", ariaRepeat: "Ripeti la richiesta", ariaGear: "Impostazioni (tieni premuto)",
+    ariaHome: "Torna ai giochi", ariaRepeat: "Ripeti la richiesta", ariaGear: "Impostazioni (tieni premuto per 1,2 secondi)",
     ariaMascot: "Bubo — tocca per riascoltare",
     ariaLang: "Passa all'inglese", langSet: "Ho cambiato lingua. Ora parlo italiano.",
     speechLang: "it-IT", voiceName: /italian/i, preferredVoiceName: /alice/i,
@@ -382,7 +382,7 @@ const STR = {
     voiceOn: "Voce attiva",
     mascotHi: ["Ciao! Sono Bubo.", "Eccoti! Sono Bubo il gufo.", "Ciao ciao! Giochiamo insieme?"],
     mascotCheer: ["Bubo è contento di te!", "Bubo batte le ali per te!", "Bubo dice bravo!"],
-    pTitle: "Area genitori", pSub: "Impostazioni",
+    pTitle: "Area genitori", pSub: "Per riaprire quest'area, tieni premuto ⚙️ per 1,2 secondi.",
     pChild: "👶 Nome del bambino (facoltativo)", pNamePlaceholder: "Es. Sofia",
     pAge: "🎂 Età del bambino",
     age1L: "Meno di 3 anni", age1S: "sotto i 36 mesi",
@@ -426,7 +426,7 @@ const STR = {
   },
   en: {
     docTitle: "GiocaMente — games for the mind (age 3)",
-    ariaHome: "Back to the games", ariaRepeat: "Repeat the prompt", ariaGear: "Settings (press and hold)",
+    ariaHome: "Back to the games", ariaRepeat: "Repeat the prompt", ariaGear: "Settings (press and hold for 1.2 seconds)",
     ariaMascot: "Bubo — tap to hear it again",
     ariaLang: "Switch to Italian", langSet: "Language changed. I speak English now.",
     speechLang: "en-US", voiceName: /english/i, preferredVoiceName: /samantha/i,
@@ -448,7 +448,7 @@ const STR = {
     voiceOn: "Voice on",
     mascotHi: ["Hello! I'm Bubo.", "There you are! I'm Bubo the owl.", "Hi hi! Shall we play together?"],
     mascotCheer: ["Bubo is happy with you!", "Bubo is flapping wings for you!", "Bubo says well done!"],
-    pTitle: "Parents' area", pSub: "Settings",
+    pTitle: "Parents' area", pSub: "To reopen this area, press and hold ⚙️ for 1.2 seconds.",
     pChild: "👶 Child's name (optional)", pNamePlaceholder: "E.g. Sophie",
     pAge: "🎂 Child's age",
     age1L: "Under 3", age1S: "under 36 months",
