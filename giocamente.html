@@ -255,9 +255,7 @@ body{
 .techrow{padding:10px 4px;border-bottom:1px solid rgba(0,0,0,.08);text-align:left}
 .techrow:last-of-type{border-bottom:0}
 .techhead{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:16px;font-weight:700;margin-bottom:6px}
-.techval{font-variant-numeric:tabular-nums;opacity:.7;flex:0 0 auto}
 .techctl{display:flex;align-items:center;gap:10px}
-.slider{flex:1 1 auto;width:100%;height:34px;accent-color:var(--c3)}
 .testbtn{border:0;border-radius:14px;padding:8px 14px;font-size:15px;font-weight:800;
   background:var(--c1);color:#fff;cursor:pointer;flex:0 0 auto;min-height:40px;white-space:nowrap}
 .testbtn:active{transform:translateY(2px)}
@@ -372,11 +370,8 @@ const STR = {
       "saltare i primi round, quelli più facili. I giochi restano pensati per i 3 anni, cambia solo da dove si parte.",
     hiName: n => "Ciao " + n + "! Sono Bubo.",
     pSounds: "🔉 Suoni", pVoice: "🗣️ Voce italiana",
-    pSoundVol: "🔊 Volume suoni", pRate: "🎚️ Velocità voce", pPitch: "🎵 Tono voce",
-    pVoiceVol: "🔈 Volume voce", pVoicePick: "🗣️ Voce del dispositivo",
+    pVoicePick: "🗣️ Voce del dispositivo",
     pVoiceAuto: "Automatica", pTest: "▶️ Prova",
-    ariaTestSound: "Prova il volume dei suoni", ariaTestRate: "Prova la velocità della voce",
-    ariaTestPitch: "Prova il tono della voce", ariaTestVoiceVol: "Prova il volume della voce",
     ariaTestVoicePick: "Prova questa voce",
     pTestSample: "Ciao! Sono Bubo. Ti piaccio così?",
     pCap: "📅 Una partita al giorno per gioco",
@@ -436,11 +431,8 @@ const STR = {
       "first rounds can be skipped. The games are still designed for age 3 — only the starting point changes.",
     hiName: n => "Hi " + n + "! I'm Bubo.",
     pSounds: "🔉 Sounds", pVoice: "🗣️ Spoken voice",
-    pSoundVol: "🔊 Sound volume", pRate: "🎚️ Voice speed", pPitch: "🎵 Voice pitch",
-    pVoiceVol: "🔈 Voice volume", pVoicePick: "🗣️ Device voice",
+    pVoicePick: "🗣️ Device voice",
     pVoiceAuto: "Automatic", pTest: "▶️ Test",
-    ariaTestSound: "Test the sound volume", ariaTestRate: "Test the voice speed",
-    ariaTestPitch: "Test the voice pitch", ariaTestVoiceVol: "Test the voice volume",
     ariaTestVoicePick: "Test this voice",
     pTestSample: "Hi! I'm Bubo. Do you like me like this?",
     pCap: "📅 One session per game per day",
@@ -605,9 +597,7 @@ const Sound = {
   flip() { this.tone(540, .12, "triangle", .11); },
   good() { [523.25, 659.25, 783.99].forEach((f, i) => this.tone(f, .24, "sine", .15, i * .09)); },
   win()  { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => this.tone(f, .32, "sine", .15, i * .11)); },
-  nope() { this.tone(300, .16, "sine", .09); this.tone(245, .22, "sine", .08, .14); },  // morbido, mai punitivo
-  /** Suona sempre, anche a interruttore spento: usato dal tasto "Prova" in area genitori. */
-  test() { [523.25, 659.25, 783.99].forEach((f, i) => this.raw(f, .24, "sine", .15, i * .09)); }
+  nope() { this.tone(300, .16, "sine", .09); this.tone(245, .22, "sine", .08, .14); }  // morbido, mai punitivo
 };
 
 /* =========================================================
@@ -1142,19 +1132,6 @@ KidBrain.register({
 /* =========================================================
    9. AREA GENITORI (accesso: tieni premuto ⚙️ per 1,2 s)
    ========================================================= */
-/** Riga con slider percentuale + tasto "Prova": permette ai genitori di sentire subito l'effetto. */
-function techRow(label, id, min, max, val, testKey, aria) {
-  return (
-    '<div class="techrow">' +
-      '<div class="techhead"><span>' + label + '</span><b class="techval" id="' + id + 'val">' + val + '%</b></div>' +
-      '<div class="techctl">' +
-        '<input type="range" class="slider" id="' + id + '" min="' + min + '" max="' + max + '" step="5" value="' + val + '">' +
-        '<button class="testbtn" data-test="' + testKey + '" aria-label="' + aria + '">' + T.pTest + '</button>' +
-      '</div>' +
-    '</div>'
-  );
-}
-
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -1200,11 +1177,7 @@ function openParents() {
         '<div class="note" style="margin-top:10px">' + T.pAgeNote + '</div>' +
       '</div>' +
       '<div class="optrow"><span>' + T.pSounds + '</span><button class="sw' + (S.sound ? " on" : "") + '" data-t="sound"></button></div>' +
-      techRow(T.pSoundVol, "soundVol", 0, 150, Math.round(S.soundVolume * 100), "sound", T.ariaTestSound) +
       '<div class="optrow"><span>' + T.pVoice + '</span><button class="sw' + (S.voice ? " on" : "") + '" data-t="voice"></button></div>' +
-      techRow(T.pRate, "rate", 50, 150, Math.round(S.voiceRate * 100), "rate", T.ariaTestRate) +
-      techRow(T.pPitch, "pitch", 0, 200, Math.round(S.voicePitch * 100), "pitch", T.ariaTestPitch) +
-      techRow(T.pVoiceVol, "vvol", 0, 100, Math.round(S.voiceVolume * 100), "vvol", T.ariaTestVoiceVol) +
       voiceRow() +
       '<div class="optrow"><span>' + T.pCap + '</span><button class="sw' + (d.cap ? " on" : "") + '" data-t="cap"></button></div>' +
       '<div class="optrow"><span>' + T.pToday(d.played.length, KidBrain.games.length) + '</span>' +
@@ -1215,16 +1188,7 @@ function openParents() {
     '</div>';
   sh.addEventListener("input", e => {
     const name = e.target.closest("#childName");
-    if (name) { Profile.setName(name.value); return; }
-    const r = e.target.closest("input[type=range]");
-    if (!r) return;
-    const v = Number(r.value);
-    const label = $("#" + r.id + "val", sh);
-    if (label) label.textContent = v + "%";
-    if (r.id === "soundVol") S.soundVolume = v / 100;
-    else if (r.id === "rate") S.voiceRate = v / 100;
-    else if (r.id === "pitch") S.voicePitch = v / 100;
-    else if (r.id === "vvol") S.voiceVolume = v / 100;
+    if (name) Profile.setName(name.value);
   });
   sh.addEventListener("change", e => {
     const sel = e.target.closest("#voiceSel");
@@ -1238,12 +1202,7 @@ function openParents() {
       Sound.tap();
       return;
     }
-    const test = e.target.closest("[data-test]");
-    if (test) {
-      const k = test.dataset.test;
-      if (k === "sound") Sound.test(); else Voice.test();
-      return;
-    }
+    if (e.target.closest("[data-test]")) { Voice.test(); return; }
     const t = e.target.closest("[data-t]");
     if (t) {
       const k = t.dataset.t;
