@@ -861,8 +861,15 @@ function makeCtx(game, level, round, total, resolve) {
       });
     },
 
-    /** Chiude il turno. */
-    solved() { if (ctx._done) return; ctx._done = true; armIdle(null); resolve(); }
+    /** Chiude il turno. onSolved(wrongs), se il gioco lo imposta, viene
+        chiamato prima di passare al turno successivo: serve ai giochi che
+        gestiscono da soli l'avanzamento di livello in base alla correttezza
+        della risposta (0 errori = risposta corretta al primo tocco). */
+    solved() {
+      if (ctx._done) return; ctx._done = true; armIdle(null);
+      if (ctx.onSolved) ctx.onSolved(wrongs);
+      resolve();
+    }
   };
   return ctx;
 }
@@ -982,47 +989,101 @@ const SHAPES = {
   triangolo: '<polygon points="50,8 94,90 6,90"/>',
   stella:    '<polygon points="50,4 61,37 96,37 68,58 79,93 50,72 21,93 32,58 4,37 39,37"/>',
   cuore:     '<path d="M50 92 C6 62 6 28 28 19 C40 14 50 22 50 31 C50 22 60 14 72 19 C94 28 94 62 50 92 Z"/>',
-  luna:      '<path d="M64 6 A46 46 0 1 0 64 94 A37 37 0 1 1 64 6 Z"/>'
+  luna:      '<path d="M64 6 A46 46 0 1 0 64 94 A37 37 0 1 1 64 6 Z"/>',
+  rombo:     '<polygon points="50,4 96,50 50,96 4,50"/>',
+  esagono:   '<polygon points="50,4 90,27 90,73 50,96 10,73 10,27"/>'
 };
 const COLORS = [
   { n: "rosso", h: "#ef4444" }, { n: "blu", h: "#3b82f6" }, { n: "giallo", h: "#f5c211" },
   { n: "verde", h: "#22c55e" }, { n: "arancione", h: "#f97316" }, { n: "viola", h: "#a855f7" }
 ];
-const svgShape = (s, h) => '<svg viewBox="0 0 100 100" fill="' + h + '">' + SHAPES[s] + '</svg>';
+/* "pieno" = tinta unita; le altre due sono pattern SVG (righe diagonali, pois),
+   una variabile visiva in più oltre a forma e colore. */
+const TEXTURES = ["pieno", "righe", "pois"];
+let texSeq = 0;
+const svgShape = (s, h, tex) => {
+  const shape = SHAPES[s];
+  if (!tex || tex === "pieno") return '<svg viewBox="0 0 100 100" fill="' + h + '">' + shape + '</svg>';
+  const id = "tex" + (texSeq++);
+  const pattern = tex === "righe"
+    ? '<pattern id="' + id + '" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
+        '<rect width="16" height="16" fill="' + h + '"/><rect width="8" height="16" fill="#fff" opacity=".55"/></pattern>'
+    : '<pattern id="' + id + '" width="24" height="24" patternUnits="userSpaceOnUse">' +
+        '<rect width="24" height="24" fill="' + h + '"/><circle cx="12" cy="12" r="6" fill="#fff" opacity=".65"/></pattern>';
+  return '<svg viewBox="0 0 100 100"><defs>' + pattern + '</defs><g fill="url(#' + id + ')">' + shape + '</g></svg>';
+};
+
+/* Livello per il gioco delle forme: non sale un tot per round come nel
+   motore generico, ma in base a come il bambino risponde davvero.
+   2 risposte corrette al primo tocco di fila -> livello successivo.
+   Un errore nel turno -> il livello resta quello (mai una retrocessione,
+   coerente con "nessuno stato di fallimento" del motore).
+   Il progresso resta in memoria fra una partita e la successiva della
+   stessa sessione (come le stelle): con solo 5 turni a partita, azzerarlo
+   ad ogni "Ancora" renderebbe i livelli 4 e 5 (texture) irraggiungibili. */
+const MATCH_MAX_LEVEL = 5;
+const matchProgress = { level: Math.min(MATCH_MAX_LEVEL, Profile.minLevel()), streak: 0 };
 
 KidBrain.register({
   id: "match", titleKey: "matchTitle", icon: "🔷", tint: "var(--c2)", rounds: 5,
   playRound(ctx) {
+    const level = matchProgress.level;
     const shapes = shuffle(Object.keys(SHAPES));
     const cols = shuffle(COLORS);
+    const texs = shuffle(TEXTURES);
     let target, options;
 
-    if (ctx.level === 1) {                 // varia solo la FORMA
-      const c = cols[0], s = shapes.slice(0, 3);
-      target = { s: s[0], c };
-      options = s.map(x => ({ s: x, c }));
-    } else if (ctx.level === 2) {          // varia solo il COLORE
-      const s = shapes[0], cs = cols.slice(0, 3);
-      target = { s, c: cs[0] };
-      options = cs.map(c => ({ s, c }));
-    } else {                               // varia forma E colore (4 opzioni)
-      target = { s: shapes[0], c: cols[0] };
+    if (level === 1) {                     // varia solo la FORMA
+      const c = cols[0], tx = texs[0], s = shapes.slice(0, 3);
+      target = { s: s[0], c, tx };
+      options = s.map(x => ({ s: x, c, tx }));
+    } else if (level === 2) {              // varia solo il COLORE
+      const s = shapes[0], tx = texs[0], cs = cols.slice(0, 3);
+      target = { s, c: cs[0], tx };
+      options = cs.map(c => ({ s, c, tx }));
+    } else if (level === 3) {              // varia forma E colore (4 opzioni)
+      const tx = texs[0];
+      target = { s: shapes[0], c: cols[0], tx };
       options = [
-        { s: shapes[0], c: cols[0] }, { s: shapes[0], c: cols[1] },
-        { s: shapes[1], c: cols[0] }, { s: shapes[1], c: cols[1] }
+        { s: shapes[0], c: cols[0], tx }, { s: shapes[0], c: cols[1], tx },
+        { s: shapes[1], c: cols[0], tx }, { s: shapes[1], c: cols[1], tx }
+      ];
+    } else if (level === 4) {              // varia solo la TEXTURE (pieno / righe / pois)
+      const s = shapes[0], c = cols[0], txs = texs.slice(0, 3);
+      target = { s, c, tx: txs[0] };
+      options = txs.map(tx => ({ s, c, tx }));
+    } else {                               // livello 5: forma, colore e texture insieme
+      target = { s: shapes[0], c: cols[0], tx: texs[0] };
+      options = [
+        target,
+        { s: shapes[1], c: cols[0], tx: texs[0] },
+        { s: shapes[0], c: cols[1], tx: texs[0] },
+        { s: shapes[0], c: cols[0], tx: texs[1] }
       ];
     }
 
-    const model = mk("div", "model", svgShape(target.s, target.c.h));
+    const model = mk("div", "model", svgShape(target.s, target.c.h, target.tx));
     const row = mk("div", "row");
     shuffle(options).forEach(o => {
-      const t = mk("div", "tile", svgShape(o.s, o.c.h));
-      ctx.choice(t, o.s === target.s && o.c.n === target.c.n);
+      const t = mk("div", "tile", svgShape(o.s, o.c.h, o.tx));
+      ctx.choice(t, o.s === target.s && o.c.n === target.c.n && o.tx === target.tx);
       row.appendChild(t);
     });
     ctx.el.appendChild(model);
     ctx.el.appendChild(row);
     ctx.prompt(T.matchPrompt);
+
+    ctx.onSolved = wrongs => {
+      if (wrongs === 0) {
+        matchProgress.streak++;
+        if (matchProgress.streak >= 2) {
+          matchProgress.level = Math.min(MATCH_MAX_LEVEL, matchProgress.level + 1);
+          matchProgress.streak = 0;
+        }
+      } else {
+        matchProgress.streak = 0;          // errore nel turno: livello mantenuto, serie azzerata
+      }
+    };
   }
 });
 
@@ -1413,6 +1474,9 @@ function openParents() {
        //   opts.say   -> frase aggiunta alla lode ("Bravo! Sono tre mele.")
        //   opts.stamp -> simbolo dell'effetto a tutto schermo (default ⭐)
        // ctx.solved()              chiude il turno a mano (es. memory)
+       // ctx.onSolved = wrongs =>  facoltativo: chiamato alla chiusura del turno con
+       //   il numero di errori fatti (0 = risposta giusta al primo tocco). Serve ai
+       //   giochi che gestiscono da soli l'avanzamento di livello (es. "match").
        // ctx.shuffle / pick / rnd / range / sleep
 
        const bersaglio = ctx.pick(COLORS);
