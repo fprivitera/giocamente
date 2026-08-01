@@ -883,37 +883,42 @@ function makeCtx(game, level, round, total, resolve) {
     say(t) { Voice.say(t); },
 
     /** Registra una tessera come risposta giusta o sbagliata.
-        opts.say  -> frase aggiunta alla lode, per nominare ciò che il bambino
-                     ha appena scelto ("Bravo! Questa faccia è contenta.")
-        opts.stamp-> simbolo dell'effetto a tutto schermo (default ⭐) */
+        opts.say    -> frase aggiunta alla lode, per nominare ciò che il bambino
+                       ha appena scelto ("Bravo! Questa faccia è contenta.")
+        opts.stamp  -> simbolo dell'effetto a tutto schermo (default ⭐)
+        opts.tapSay -> testo pronunciato subito al tocco, prima ancora di sapere
+                       se giusto o sbagliato (es. il nome del numero toccato) */
     choice(node, isCorrect, opts) {
       const o = opts || {};
       choices.push({ node, isCorrect });
       node.addEventListener("click", () => {
         if (locked) return;
-        if (isCorrect) {
-          locked = true;
-          Sound.good(); FX.stamp(o.stamp || "⭐"); Mascot.react("happy");
-          node.classList.add("right");
-          choices.forEach(c => { c.node.classList.remove("hint"); if (c.node !== node) c.node.classList.add("dim"); });
-          /* Il turno cambia quando la lode è finita di essere pronunciata,
-             mai prima di 950 ms (serve a vedere la stella) né oltre il tetto:
-             così la frase non viene tagliata e il gioco non resta mai fermo
-             se la sintesi vocale manca o si blocca. */
-          const t0 = Date.now(), cap = o.say ? 3600 : 1800;
-          Voice.say(praiseText() + (o.say ? " " + o.say : ""),
-            () => setTimeout(ctx.solved, Math.max(0, 950 - (Date.now() - t0))));
-          setTimeout(ctx.solved, cap);
-        } else {
-          wrongs++;
-          Sound.nope(); Mascot.react("oops");
-          node.classList.remove("wrong"); void node.offsetWidth; node.classList.add("wrong");
-          if (wrongs === 1) Voice.say(T.tryAgain);
-          if (wrongs >= 2) {   // nessun fallimento: dopo 2 tentativi si accende l'aiuto
-            choices.filter(c => c.isCorrect).forEach(c => c.node.classList.add("hint"));
-            if (wrongs === 2) Voice.say(T.lookHint);
+        const settle = () => {
+          if (isCorrect) {
+            locked = true;
+            Sound.good(); FX.stamp(o.stamp || "⭐"); Mascot.react("happy");
+            node.classList.add("right");
+            choices.forEach(c => { c.node.classList.remove("hint"); if (c.node !== node) c.node.classList.add("dim"); });
+            /* Il turno cambia quando la lode è finita di essere pronunciata,
+               mai prima di 950 ms (serve a vedere la stella) né oltre il tetto:
+               così la frase non viene tagliata e il gioco non resta mai fermo
+               se la sintesi vocale manca o si blocca. */
+            const t0 = Date.now(), cap = o.say ? 3600 : 1800;
+            Voice.say(praiseText() + (o.say ? " " + o.say : ""),
+              () => setTimeout(ctx.solved, Math.max(0, 950 - (Date.now() - t0))));
+            setTimeout(ctx.solved, cap);
+          } else {
+            wrongs++;
+            Sound.nope(); Mascot.react("oops");
+            node.classList.remove("wrong"); void node.offsetWidth; node.classList.add("wrong");
+            if (wrongs === 1) Voice.say(T.tryAgain);
+            if (wrongs >= 2) {   // nessun fallimento: dopo 2 tentativi si accende l'aiuto
+              choices.filter(c => c.isCorrect).forEach(c => c.node.classList.add("hint"));
+              if (wrongs === 2) Voice.say(T.lookHint);
+            }
           }
-        }
+        };
+        if (o.tapSay) Voice.say(o.tapSay, settle); else settle();
       });
     },
 
@@ -1265,6 +1270,7 @@ KidBrain.register({
         if (busy || card.classList.contains("up") || card.classList.contains("done")) return;
         Sound.flip();
         card.classList.add("up");
+        Voice.say(a[LANG]);           // nomina l'animale a ogni carta girata, non solo alla coppia trovata
         open.push(card);
         if (open.length < 2) return;
 
@@ -1445,7 +1451,7 @@ KidBrain.register({
             const face = mk("span", "face", String(k));
             face.style.fontWeight = "900";
             t.appendChild(face);
-            ctx.choice(t, k === target);
+            ctx.choice(t, k === target, { tapSay: T.numw10[k - 11] });
             row.appendChild(t);
           });
           ctx.prompt(T.count10ChoosePrompt(target, T.numw10));
