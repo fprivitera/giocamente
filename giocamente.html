@@ -233,7 +233,8 @@ body{
 }
 .sheetbox{
   background:#fff;border-radius:32px;box-shadow:0 24px 60px rgba(0,0,0,.3);
-  padding:clamp(20px,5vmin,40px);text-align:center;max-width:560px;width:100%
+  padding:clamp(20px,5vmin,40px);text-align:center;max-width:560px;width:100%;
+  max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch
 }
 .sheetbox h2{margin:0 0 6px;font-size:clamp(26px,6vmin,44px)}
 .sheetbox p{margin:0 0 18px;font-size:clamp(16px,3.2vmin,22px);opacity:.75}
@@ -251,6 +252,17 @@ body{
 .sw::after{content:"";position:absolute;top:4px;left:4px;width:34px;height:34px;border-radius:50%;
   background:#fff;transition:left .18s ease}
 .sw.on{background:var(--c3)} .sw.on::after{left:36px}
+.techrow{padding:10px 4px;border-bottom:1px solid rgba(0,0,0,.08);text-align:left}
+.techrow:last-of-type{border-bottom:0}
+.techhead{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:16px;font-weight:700;margin-bottom:6px}
+.techval{font-variant-numeric:tabular-nums;opacity:.7;flex:0 0 auto}
+.techctl{display:flex;align-items:center;gap:10px}
+.slider{flex:1 1 auto;width:100%;height:34px;accent-color:var(--c3)}
+.testbtn{border:0;border-radius:14px;padding:8px 14px;font-size:15px;font-weight:800;
+  background:var(--c1);color:#fff;cursor:pointer;flex:0 0 auto;min-height:40px;white-space:nowrap}
+.testbtn:active{transform:translateY(2px)}
+.voicesel{flex:1 1 auto;min-width:0;height:40px;border-radius:12px;border:1px solid rgba(0,0,0,.15);
+  padding:0 8px;font-size:15px;font-family:inherit;background:#fff;color:inherit}
 .note{font-size:14px;opacity:.6;text-align:left;margin-top:14px;line-height:1.45}
 
 /* schermi bassi (telefono in landscape): modello e risposte su un'unica riga */
@@ -343,6 +355,13 @@ const STR = {
     mascotCheer: ["Bubo è contento di te!", "Bubo batte le ali per te!", "Bubo dice bravo!"],
     pTitle: "Area genitori", pSub: "Impostazioni",
     pSounds: "🔉 Suoni", pVoice: "🗣️ Voce italiana",
+    pSoundVol: "🔊 Volume suoni", pRate: "🎚️ Velocità voce", pPitch: "🎵 Tono voce",
+    pVoiceVol: "🔈 Volume voce", pVoicePick: "🗣️ Voce del dispositivo",
+    pVoiceAuto: "Automatica", pTest: "▶️ Prova",
+    ariaTestSound: "Prova il volume dei suoni", ariaTestRate: "Prova la velocità della voce",
+    ariaTestPitch: "Prova il tono della voce", ariaTestVoiceVol: "Prova il volume della voce",
+    ariaTestVoicePick: "Prova questa voce",
+    pTestSample: "Ciao! Sono Bubo. Ti piaccio così?",
     pCap: "📅 Una partita al giorno per gioco",
     pToday: (n, tot) => "🔓 Partite di oggi (" + n + "/" + tot + " fatte)",
     pUnlock: "Sblocca", pUnlocked: "Sbloccate ✓",
@@ -390,6 +409,13 @@ const STR = {
     mascotCheer: ["Bubo is happy with you!", "Bubo is flapping wings for you!", "Bubo says well done!"],
     pTitle: "Parents' area", pSub: "Settings",
     pSounds: "🔉 Sounds", pVoice: "🗣️ Spoken voice",
+    pSoundVol: "🔊 Sound volume", pRate: "🎚️ Voice speed", pPitch: "🎵 Voice pitch",
+    pVoiceVol: "🔈 Voice volume", pVoicePick: "🗣️ Device voice",
+    pVoiceAuto: "Automatic", pTest: "▶️ Test",
+    ariaTestSound: "Test the sound volume", ariaTestRate: "Test the voice speed",
+    ariaTestPitch: "Test the voice pitch", ariaTestVoiceVol: "Test the voice volume",
+    ariaTestVoicePick: "Test this voice",
+    pTestSample: "Hi! I'm Bubo. Do you like me like this?",
     pCap: "📅 One session per game per day",
     pToday: (n, tot) => "🔓 Today's sessions (" + n + "/" + tot + " done)",
     pUnlock: "Unlock", pUnlocked: "Unlocked ✓",
@@ -439,7 +465,10 @@ function syncLangBtn() {
 }
 
 /* Stato di sessione: stelle e impostazioni audio restano in memoria, si azzerano al reload. */
-const S = { stars: 0, sound: true, voice: true, token: null, resolve: null };
+const S = {
+  stars: 0, sound: true, voice: true, token: null, resolve: null,
+  soundVolume: 1, voiceRate: .92, voicePitch: 1.15, voiceVolume: 1
+};
 
 /* =========================================================
    1b. CAP GIORNALIERO — una partita al giorno per gioco
@@ -488,12 +517,17 @@ const Sound = {
   },
   tone(freq, dur = .18, type = "sine", gain = .16, delay = 0) {
     if (!S.sound) return;
+    this.raw(freq, dur, type, gain, delay);
+  },
+  /** Come tone(), ma ignora l'interruttore: serve al tasto "Prova" del volume. */
+  raw(freq, dur = .18, type = "sine", gain = .16, delay = 0) {
     const ac = this.ctx(); if (!ac) return;
     const t0 = ac.currentTime + delay;
     const o = ac.createOscillator(), g = ac.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, t0);
+    const peak = Math.max(0.0001, gain * S.soundVolume);
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.linearRampToValueAtTime(gain, t0 + .02);
+    g.gain.linearRampToValueAtTime(peak, t0 + .02);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     o.connect(g); g.connect(ac.destination);
     o.start(t0); o.stop(t0 + dur + .05);
@@ -502,14 +536,16 @@ const Sound = {
   flip() { this.tone(540, .12, "triangle", .11); },
   good() { [523.25, 659.25, 783.99].forEach((f, i) => this.tone(f, .24, "sine", .15, i * .09)); },
   win()  { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => this.tone(f, .32, "sine", .15, i * .11)); },
-  nope() { this.tone(300, .16, "sine", .09); this.tone(245, .22, "sine", .08, .14); }   // morbido, mai punitivo
+  nope() { this.tone(300, .16, "sine", .09); this.tone(245, .22, "sine", .08, .14); },  // morbido, mai punitivo
+  /** Suona sempre, anche a interruttore spento: usato dal tasto "Prova" in area genitori. */
+  test() { [523.25, 659.25, 783.99].forEach((f, i) => this.raw(f, .24, "sine", .15, i * .09)); }
 };
 
 /* =========================================================
    3. VOCE — Web Speech API nella lingua rilevata
    ========================================================= */
 const Voice = {
-  v: null, bound: false, ok: ("speechSynthesis" in window),
+  v: null, overrideURI: null, bound: false, ok: ("speechSynthesis" in window),
   init() {
     if (!this.ok) return;
     this.pick();
@@ -518,28 +554,50 @@ const Voice = {
       speechSynthesis.addEventListener("voiceschanged", () => this.pick());
     }
   },
-  /** Sceglie la voce del dispositivo per la lingua attiva. */
+  /** Sceglie la voce del dispositivo per la lingua attiva, rispettando la scelta manuale in area genitori. */
   pick() {
     if (!this.ok) return;
-    const langRe = new RegExp("^" + LANG + "[-_]?", "i");
     const list = speechSynthesis.getVoices() || [];
+    if (this.overrideURI) {
+      const chosen = list.find(x => x.voiceURI === this.overrideURI);
+      if (chosen) { this.v = chosen; return; }
+    }
+    const langRe = new RegExp("^" + LANG + "[-_]?", "i");
     this.v = list.find(x => langRe.test(x.lang)) || list.find(x => T.voiceName.test(x.name)) || null;
+  },
+  /** Imposta la voce scelta a mano dal genitore (voiceURI), o torna alla scelta automatica se vuoto. */
+  setVoice(uri) { this.overrideURI = uri || null; this.pick(); },
+  /** Voci disponibili sul dispositivo per la lingua attiva, quelle più pertinenti per prime. */
+  list() {
+    if (!this.ok) return [];
+    const langRe = new RegExp("^" + LANG + "[-_]?", "i");
+    return (speechSynthesis.getVoices() || []).slice().sort((a, b) => {
+      const am = langRe.test(a.lang) ? 0 : 1, bm = langRe.test(b.lang) ? 0 : 1;
+      return am !== bm ? am - bm : a.name.localeCompare(b.name);
+    });
   },
   /** done() viene richiamato a fine frase — o subito, se la voce non c'è.
       Serve al motore per non cambiare turno mentre sta ancora parlando. */
   say(text, done) {
+    if (!S.voice) { if (done) done(); return; }
+    this.speak(text, done);
+  },
+  /** Come say(), ma ignora l'interruttore: usato dal tasto "Prova" in area genitori. */
+  speak(text, done) {
     let fired = false;
     const end = () => { if (fired) return; fired = true; if (done) done(); };
-    if (!this.ok || !S.voice || !text) return end();
+    if (!this.ok || !text) return end();
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = T.speechLang; if (this.v) u.voice = this.v;
-      u.rate = .92; u.pitch = 1.15; u.volume = 1;
+      u.rate = S.voiceRate; u.pitch = S.voicePitch; u.volume = S.voiceVolume;
       u.onend = end; u.onerror = end;
       speechSynthesis.speak(u);
     } catch (e) { end(); /* voce non disponibile: si continua coi soli suoni */ }
   },
+  /** Frase di prova con le impostazioni correnti, anche a voce spenta. */
+  test() { this.speak(T.pTestSample); },
   stop() { if (this.ok) { try { speechSynthesis.cancel(); } catch (e) {} } }
 };
 
@@ -1011,6 +1069,41 @@ KidBrain.register({
 /* =========================================================
    9. AREA GENITORI (accesso: tieni premuto ⚙️ per 1,2 s)
    ========================================================= */
+/** Riga con slider percentuale + tasto "Prova": permette ai genitori di sentire subito l'effetto. */
+function techRow(label, id, min, max, val, testKey, aria) {
+  return (
+    '<div class="techrow">' +
+      '<div class="techhead"><span>' + label + '</span><b class="techval" id="' + id + 'val">' + val + '%</b></div>' +
+      '<div class="techctl">' +
+        '<input type="range" class="slider" id="' + id + '" min="' + min + '" max="' + max + '" step="5" value="' + val + '">' +
+        '<button class="testbtn" data-test="' + testKey + '" aria-label="' + aria + '">' + T.pTest + '</button>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/** Riga di scelta della voce del dispositivo, con tasto "Prova". */
+function voiceRow() {
+  let opts = '<option value="">' + T.pVoiceAuto + '</option>';
+  Voice.list().forEach(v => {
+    const sel = Voice.overrideURI === v.voiceURI ? " selected" : "";
+    opts += '<option value="' + esc(v.voiceURI) + '"' + sel + '>' + esc(v.name + " (" + v.lang + ")") + '</option>';
+  });
+  return (
+    '<div class="techrow">' +
+      '<div class="techhead"><span>' + T.pVoicePick + '</span></div>' +
+      '<div class="techctl">' +
+        '<select class="voicesel" id="voiceSel">' + opts + '</select>' +
+        '<button class="testbtn" data-test="voicepick" aria-label="' + T.ariaTestVoicePick + '">' + T.pTest + '</button>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
 function openParents() {
   const d = Daily.load();
   const sh = mk("div", "sheet");
@@ -1018,7 +1111,12 @@ function openParents() {
     '<div class="sheetbox">' +
       '<h2>' + T.pTitle + '</h2><p>' + T.pSub + '</p>' +
       '<div class="optrow"><span>' + T.pSounds + '</span><button class="sw' + (S.sound ? " on" : "") + '" data-t="sound"></button></div>' +
+      techRow(T.pSoundVol, "soundVol", 0, 150, Math.round(S.soundVolume * 100), "sound", T.ariaTestSound) +
       '<div class="optrow"><span>' + T.pVoice + '</span><button class="sw' + (S.voice ? " on" : "") + '" data-t="voice"></button></div>' +
+      techRow(T.pRate, "rate", 50, 150, Math.round(S.voiceRate * 100), "rate", T.ariaTestRate) +
+      techRow(T.pPitch, "pitch", 0, 200, Math.round(S.voicePitch * 100), "pitch", T.ariaTestPitch) +
+      techRow(T.pVoiceVol, "vvol", 0, 100, Math.round(S.voiceVolume * 100), "vvol", T.ariaTestVoiceVol) +
+      voiceRow() +
       '<div class="optrow"><span>' + T.pCap + '</span><button class="sw' + (d.cap ? " on" : "") + '" data-t="cap"></button></div>' +
       '<div class="optrow"><span>' + T.pToday(d.played.length, KidBrain.games.length) + '</span>' +
         '<button class="bigbtn b" data-a="unlock" style="min-width:0;min-height:0;padding:10px 18px;font-size:16px;margin:0">' + T.pUnlock + '</button></div>' +
@@ -1026,7 +1124,28 @@ function openParents() {
       '<div style="margin-top:18px"><button class="bigbtn b" data-a="close">' + T.pClose + '</button></div>' +
       '<div class="note">' + T.pNote + '</div>' +
     '</div>';
+  sh.addEventListener("input", e => {
+    const r = e.target.closest("input[type=range]");
+    if (!r) return;
+    const v = Number(r.value);
+    const label = $("#" + r.id + "val", sh);
+    if (label) label.textContent = v + "%";
+    if (r.id === "soundVol") S.soundVolume = v / 100;
+    else if (r.id === "rate") S.voiceRate = v / 100;
+    else if (r.id === "pitch") S.voicePitch = v / 100;
+    else if (r.id === "vvol") S.voiceVolume = v / 100;
+  });
+  sh.addEventListener("change", e => {
+    const sel = e.target.closest("#voiceSel");
+    if (sel) Voice.setVoice(sel.value);
+  });
   sh.addEventListener("click", e => {
+    const test = e.target.closest("[data-test]");
+    if (test) {
+      const k = test.dataset.test;
+      if (k === "sound") Sound.test(); else Voice.test();
+      return;
+    }
     const t = e.target.closest("[data-t]");
     if (t) {
       const k = t.dataset.t;
