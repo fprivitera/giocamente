@@ -1020,13 +1020,20 @@ const svgShape = (s, h, tex) => {
    coerente con "nessuno stato di fallimento" del motore).
    Il progresso resta in memoria fra una partita e la successiva della
    stessa sessione (come le stelle): con solo 5 turni a partita, azzerarlo
-   ad ogni "Ancora" renderebbe i livelli 4 e 5 (texture) irraggiungibili. */
+   ad ogni "Ancora" renderebbe i livelli 4 e 5 (texture) irraggiungibili.
+   A inizio partita risale comunque almeno alla fascia d'età scelta dai
+   genitori (Profile.minLevel(), che può cambiare a sessione in corso),
+   senza mai abbassare un livello già raggiunto con il gioco. */
 const MATCH_MAX_LEVEL = 5;
-const matchProgress = { level: Math.min(MATCH_MAX_LEVEL, Profile.minLevel()), streak: 0 };
+const matchProgress = { level: 1, streak: 0 };
 
 KidBrain.register({
   id: "match", titleKey: "matchTitle", icon: "🔷", tint: "var(--c2)", rounds: 5,
   playRound(ctx) {
+    if (ctx.round === 0) {
+      matchProgress.level = Math.min(MATCH_MAX_LEVEL, Math.max(matchProgress.level, Profile.minLevel()));
+      matchProgress.streak = 0;
+    }
     const level = matchProgress.level;
     const shapes = shuffle(Object.keys(SHAPES));
     const cols = shuffle(COLORS);
@@ -1049,9 +1056,9 @@ KidBrain.register({
         { s: shapes[1], c: cols[0], tx }, { s: shapes[1], c: cols[1], tx }
       ];
     } else if (level === 4) {              // varia solo la TEXTURE (pieno / righe / pois)
-      const s = shapes[0], c = cols[0], txs = texs.slice(0, 3);
-      target = { s, c, tx: txs[0] };
-      options = txs.map(tx => ({ s, c, tx }));
+      const s = shapes[0], c = cols[0];
+      target = { s, c, tx: texs[0] };
+      options = texs.map(tx => ({ s, c, tx }));
     } else {                               // livello 5: forma, colore e texture insieme
       target = { s: shapes[0], c: cols[0], tx: texs[0] };
       options = [
