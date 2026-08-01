@@ -255,14 +255,20 @@ body{
 .techrow{padding:10px 4px;border-bottom:1px solid rgba(0,0,0,.08);text-align:left}
 .techrow:last-of-type{border-bottom:0}
 .techhead{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:16px;font-weight:700;margin-bottom:6px}
-.techval{font-variant-numeric:tabular-nums;opacity:.7;flex:0 0 auto}
 .techctl{display:flex;align-items:center;gap:10px}
-.slider{flex:1 1 auto;width:100%;height:34px;accent-color:var(--c3)}
 .testbtn{border:0;border-radius:14px;padding:8px 14px;font-size:15px;font-weight:800;
   background:var(--c1);color:#fff;cursor:pointer;flex:0 0 auto;min-height:40px;white-space:nowrap}
 .testbtn:active{transform:translateY(2px)}
 .voicesel{flex:1 1 auto;min-width:0;height:40px;border-radius:12px;border:1px solid rgba(0,0,0,.15);
   padding:0 8px;font-size:15px;font-family:inherit;background:#fff;color:inherit}
+.nameinput{width:100%;height:44px;border-radius:12px;border:1px solid rgba(0,0,0,.15);
+  padding:0 12px;font-size:16px;font-family:inherit;background:#fff;color:inherit}
+.agegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.agebtn{border:2px solid rgba(0,0,0,.12);background:#fff;border-radius:16px;padding:10px 6px;
+  cursor:pointer;font-family:inherit;text-align:center;color:inherit}
+.agebtn b{display:block;font-size:15px;font-weight:800}
+.agebtn span{display:block;font-size:12px;font-weight:700;opacity:.6;margin-top:2px}
+.agebtn.sel{border-color:var(--c3);background:#eafff4}
 .note{font-size:14px;opacity:.6;text-align:left;margin-top:14px;line-height:1.45}
 
 /* schermi bassi (telefono in landscape): modello e risposte su un'unica riga */
@@ -335,7 +341,7 @@ const STR = {
     ariaHome: "Torna ai giochi", ariaRepeat: "Ripeti la richiesta", ariaGear: "Impostazioni (tieni premuto)",
     ariaMascot: "Bubo — tocca per riascoltare",
     ariaLang: "Passa all'inglese", langSet: "Ho cambiato lingua. Ora parlo italiano.",
-    speechLang: "it-IT", voiceName: /italian/i,
+    speechLang: "it-IT", voiceName: /italian/i, preferredVoiceName: /alice/i,
     praise: ["Bravo!", "Benissimo!", "Sì, giusto!", "Perfetto!", "Che bravo!"],
     tryAgain: "Prova ancora!",
     lookHint: "Guarda, è questo che brilla!",
@@ -354,21 +360,28 @@ const STR = {
     mascotHi: ["Ciao! Sono Bubo.", "Eccoti! Sono Bubo il gufo.", "Ciao ciao! Giochiamo insieme?"],
     mascotCheer: ["Bubo è contento di te!", "Bubo batte le ali per te!", "Bubo dice bravo!"],
     pTitle: "Area genitori", pSub: "Impostazioni",
+    pChild: "👶 Nome del bambino (facoltativo)", pNamePlaceholder: "Es. Sofia",
+    pAge: "🎂 Età del bambino",
+    age1L: "Meno di 3 anni", age1S: "sotto i 36 mesi",
+    age2L: "3 anni", age2S: "36–41 mesi",
+    age3L: "3 anni e mezzo", age3S: "42–47 mesi",
+    age4L: "4 anni o più", age4S: "48+ mesi",
+    pAgeNote: "Serve solo a far partire ogni gioco dal livello giusto: più il bambino è grande, più si possono " +
+      "saltare i primi round, quelli più facili. I giochi restano pensati per i 3 anni, cambia solo da dove si parte.",
+    hiName: n => "Ciao " + n + "! Sono Bubo.",
     pSounds: "🔉 Suoni", pVoice: "🗣️ Voce italiana",
-    pSoundVol: "🔊 Volume suoni", pRate: "🎚️ Velocità voce", pPitch: "🎵 Tono voce",
-    pVoiceVol: "🔈 Volume voce", pVoicePick: "🗣️ Voce del dispositivo",
+    pVoicePick: "🗣️ Voce del dispositivo",
     pVoiceAuto: "Automatica", pTest: "▶️ Prova",
-    ariaTestSound: "Prova il volume dei suoni", ariaTestRate: "Prova la velocità della voce",
-    ariaTestPitch: "Prova il tono della voce", ariaTestVoiceVol: "Prova il volume della voce",
     ariaTestVoicePick: "Prova questa voce",
     pTestSample: "Ciao! Sono Bubo. Ti piaccio così?",
     pCap: "📅 Una partita al giorno per gioco",
     pToday: (n, tot) => "🔓 Partite di oggi (" + n + "/" + tot + " fatte)",
     pUnlock: "Sblocca", pUnlocked: "Sbloccate ✓",
     pStars: "⭐ Stelle raccolte", pClose: "Chiudi",
-    pNote: 'Nulla viene inviato in rete. Sul dispositivo restano soltanto il registro delle partite di oggi, ' +
-      'che serve alla regola "una al giorno", e la lingua scelta col tasto in barra; stelle e impostazioni ' +
-      'audio si azzerano ricaricando la pagina. ' +
+    pNote: 'Nulla viene inviato in rete: tutte le informazioni restano solo su questo dispositivo, dentro il ' +
+      'browser. Sul dispositivo restano il registro delle partite di oggi, che serve alla regola "una al giorno", ' +
+      'la lingua scelta col tasto in barra, e il nome e l\'età del bambino se li avete inseriti qui sopra; ' +
+      'stelle e impostazioni audio invece si azzerano ricaricando la pagina. ' +
       'Nessuna pubblicità, nessun link esterno, nessun acquisto.<br>' +
       'La regola "una partita al giorno" chiude da sola la sessione dopo pochi minuti: se volete continuare, ' +
       'usate "Sblocca" o spegnete l\'interruttore. Meglio se giocate accanto al bambino.',
@@ -389,7 +402,7 @@ const STR = {
     ariaHome: "Back to the games", ariaRepeat: "Repeat the prompt", ariaGear: "Settings (press and hold)",
     ariaMascot: "Bubo — tap to hear it again",
     ariaLang: "Switch to Italian", langSet: "Language changed. I speak English now.",
-    speechLang: "en-US", voiceName: /english/i,
+    speechLang: "en-US", voiceName: /english/i, preferredVoiceName: /samantha/i,
     praise: ["Well done!", "Great job!", "Yes, that's right!", "Perfect!", "Amazing!"],
     tryAgain: "Try again!",
     lookHint: "Look, it's the one that's glowing!",
@@ -408,21 +421,28 @@ const STR = {
     mascotHi: ["Hello! I'm Bubo.", "There you are! I'm Bubo the owl.", "Hi hi! Shall we play together?"],
     mascotCheer: ["Bubo is happy with you!", "Bubo is flapping wings for you!", "Bubo says well done!"],
     pTitle: "Parents' area", pSub: "Settings",
+    pChild: "👶 Child's name (optional)", pNamePlaceholder: "E.g. Sophie",
+    pAge: "🎂 Child's age",
+    age1L: "Under 3", age1S: "under 36 months",
+    age2L: "3 years old", age2S: "36–41 months",
+    age3L: "3 and a half", age3S: "42–47 months",
+    age4L: "4 or older", age4S: "48+ months",
+    pAgeNote: "This only changes which level each game starts from: the older the child, the more the easier " +
+      "first rounds can be skipped. The games are still designed for age 3 — only the starting point changes.",
+    hiName: n => "Hi " + n + "! I'm Bubo.",
     pSounds: "🔉 Sounds", pVoice: "🗣️ Spoken voice",
-    pSoundVol: "🔊 Sound volume", pRate: "🎚️ Voice speed", pPitch: "🎵 Voice pitch",
-    pVoiceVol: "🔈 Voice volume", pVoicePick: "🗣️ Device voice",
+    pVoicePick: "🗣️ Device voice",
     pVoiceAuto: "Automatic", pTest: "▶️ Test",
-    ariaTestSound: "Test the sound volume", ariaTestRate: "Test the voice speed",
-    ariaTestPitch: "Test the voice pitch", ariaTestVoiceVol: "Test the voice volume",
     ariaTestVoicePick: "Test this voice",
     pTestSample: "Hi! I'm Bubo. Do you like me like this?",
     pCap: "📅 One session per game per day",
     pToday: (n, tot) => "🔓 Today's sessions (" + n + "/" + tot + " done)",
     pUnlock: "Unlock", pUnlocked: "Unlocked ✓",
     pStars: "⭐ Stars collected", pClose: "Close",
-    pNote: 'Nothing is sent over the network. The only things kept on the device are today\'s play log, ' +
-      'used for the "one per day" rule, and the language picked with the button in the bar; stars and ' +
-      'audio settings reset when the page reloads. ' +
+    pNote: 'Nothing is sent over the network: everything stays only on this device, inside the browser. ' +
+      'The things kept on the device are today\'s play log, used for the "one per day" rule, the language ' +
+      'picked with the button in the bar, and your child\'s name and age if you entered them above; stars ' +
+      'and audio settings reset when the page reloads. ' +
       'No ads, no external links, no purchases.<br>' +
       'The "one session per day" rule ends the session on its own after a few minutes: to keep playing, ' +
       'use "Unlock" or turn the switch off. It\'s best to sit and play next to your child.',
@@ -473,7 +493,7 @@ const S = {
 /* =========================================================
    1b. CAP GIORNALIERO — una partita al giorno per gioco
    ---------------------------------------------------------
-   Unico dato persistito (localStorage, solo sul dispositivo):
+   Dato persistito (localStorage, solo sul dispositivo):
    { cap: bool, date: "YYYY-MM-DD", played: [id, ...] }
    Se localStorage non è disponibile degrada in memoria:
    il cap vale allora solo per la sessione corrente.
@@ -506,6 +526,47 @@ const Daily = {
 };
 
 /* =========================================================
+   1c. PROFILO BAMBINO — nome (facoltativo) ed età
+   ---------------------------------------------------------
+   Dato persistito (localStorage, solo sul dispositivo):
+   { name: string, age: "" | "u36" | "y36" | "y42" | "y48" }
+   L'età scelta imposta il livello minimo da cui parte ogni
+   gioco (vedi startGame): con un bambino più grande si può
+   saltare i round introduttivi più facili. Il nome, se dato,
+   sostituisce il saluto generico della mascotte.
+   ========================================================= */
+const AGE_BANDS = [
+  { id: "u36", minLevel: 1, labelKey: "age1L", subKey: "age1S" },
+  { id: "y36", minLevel: 1, labelKey: "age2L", subKey: "age2S" },
+  { id: "y42", minLevel: 2, labelKey: "age3L", subKey: "age3S" },
+  { id: "y48", minLevel: 3, labelKey: "age4L", subKey: "age4S" }
+];
+const Profile = {
+  key: "giocamente_profile", mem: null,
+  load() {
+    if (!this.mem) {
+      let d = null;
+      try { d = JSON.parse(localStorage.getItem(this.key)); } catch (e) {}
+      if (!d || typeof d !== "object") d = { name: "", age: "" };
+      if (typeof d.name !== "string") d.name = "";
+      if (!AGE_BANDS.some(b => b.id === d.age)) d.age = "";
+      this.mem = d;
+    }
+    return this.mem;
+  },
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.mem)); } catch (e) {} },
+  setName(n) { const d = this.load(); d.name = String(n || "").slice(0, 24); this.save(); },
+  setAge(id) { const d = this.load(); d.age = AGE_BANDS.some(b => b.id === id) ? id : ""; this.save(); },
+  minLevel() { const b = AGE_BANDS.find(x => x.id === this.load().age); return b ? b.minLevel : 1; }
+};
+
+/** Saluto della mascotte: usa il nome se i genitori l'hanno inserito. */
+function greetLine() {
+  const nm = Profile.load().name.trim();
+  return nm ? T.hiName(nm) : pick(T.mascotHi);
+}
+
+/* =========================================================
    2. AUDIO — sintesi WebAudio, zero file esterni
    ========================================================= */
 const Sound = {
@@ -536,9 +597,7 @@ const Sound = {
   flip() { this.tone(540, .12, "triangle", .11); },
   good() { [523.25, 659.25, 783.99].forEach((f, i) => this.tone(f, .24, "sine", .15, i * .09)); },
   win()  { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => this.tone(f, .32, "sine", .15, i * .11)); },
-  nope() { this.tone(300, .16, "sine", .09); this.tone(245, .22, "sine", .08, .14); },  // morbido, mai punitivo
-  /** Suona sempre, anche a interruttore spento: usato dal tasto "Prova" in area genitori. */
-  test() { [523.25, 659.25, 783.99].forEach((f, i) => this.raw(f, .24, "sine", .15, i * .09)); }
+  nope() { this.tone(300, .16, "sine", .09); this.tone(245, .22, "sine", .08, .14); }  // morbido, mai punitivo
 };
 
 /* =========================================================
@@ -554,7 +613,9 @@ const Voice = {
       speechSynthesis.addEventListener("voiceschanged", () => this.pick());
     }
   },
-  /** Sceglie la voce del dispositivo per la lingua attiva, rispettando la scelta manuale in area genitori. */
+  /** Sceglie la voce del dispositivo per la lingua attiva, rispettando la scelta manuale in area genitori.
+      Fra le voci della lingua attiva preferisce quella con il nome indicato in T.preferredVoiceName
+      (Alice per l'italiano, Samantha per l'inglese), se il dispositivo la offre. */
   pick() {
     if (!this.ok) return;
     const list = speechSynthesis.getVoices() || [];
@@ -563,7 +624,9 @@ const Voice = {
       if (chosen) { this.v = chosen; return; }
     }
     const langRe = new RegExp("^" + LANG + "[-_]?", "i");
-    this.v = list.find(x => langRe.test(x.lang)) || list.find(x => T.voiceName.test(x.name)) || null;
+    const langMatches = list.filter(x => langRe.test(x.lang));
+    this.v = langMatches.find(x => T.preferredVoiceName.test(x.name)) ||
+      langMatches[0] || list.find(x => T.voiceName.test(x.name)) || null;
   },
   /** Imposta la voce scelta a mano dal genitore (voiceURI), o torna alla scelta automatica se vuoto. */
   setVoice(uri) { this.overrideURI = uri || null; this.pick(); },
@@ -783,7 +846,12 @@ async function startGame(game) {
     if (S.token !== token) return;
     drawDots(i, total);
     $("#play").innerHTML = "";
-    const level = Math.min(3, 1 + Math.floor(i / Math.ceil(total / 3)));
+    /* Un semplice Math.max(minLevel, ...) appiattirebbe la partita a un solo
+       livello quando minLevel > 1: qui invece si ridistribuiscono i round
+       sui livelli restanti (minLevel..3), così la difficoltà sale ancora
+       durante la partita anche partendo più avanti. */
+    const minLevel = Profile.minLevel(), span = 4 - minLevel;
+    const level = Math.min(3, minLevel + Math.floor(i / Math.ceil(total / span)));
     await new Promise(res => {
       S.resolve = res;
       game.playRound(makeCtx(game, level, i, total, res));
@@ -842,7 +910,7 @@ function renderHome() {
     '<div class="gamegrid"></div>');
   /* la consegna arriva dalla mascotte, non da un sottotitolo anonimo */
   const hello = wrap.querySelector(".hello");
-  hello.appendChild(Mascot.make("big", () => Voice.say(pick(T.mascotHi) + " " + line)));
+  hello.appendChild(Mascot.make("big", () => Voice.say(greetLine() + " " + line)));
   hello.appendChild(mk("div", "bubble", line));
   const grid = wrap.querySelector(".gamegrid");
   KidBrain.games.forEach(g => {
@@ -1069,19 +1137,6 @@ KidBrain.register({
 /* =========================================================
    9. AREA GENITORI (accesso: tieni premuto ⚙️ per 1,2 s)
    ========================================================= */
-/** Riga con slider percentuale + tasto "Prova": permette ai genitori di sentire subito l'effetto. */
-function techRow(label, id, min, max, val, testKey, aria) {
-  return (
-    '<div class="techrow">' +
-      '<div class="techhead"><span>' + label + '</span><b class="techval" id="' + id + 'val">' + val + '%</b></div>' +
-      '<div class="techctl">' +
-        '<input type="range" class="slider" id="' + id + '" min="' + min + '" max="' + max + '" step="5" value="' + val + '">' +
-        '<button class="testbtn" data-test="' + testKey + '" aria-label="' + aria + '">' + T.pTest + '</button>' +
-      '</div>' +
-    '</div>'
-  );
-}
-
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -1106,16 +1161,28 @@ function voiceRow() {
 
 function openParents() {
   const d = Daily.load();
+  const p = Profile.load();
   const sh = mk("div", "sheet");
   sh.innerHTML =
     '<div class="sheetbox">' +
       '<h2>' + T.pTitle + '</h2><p>' + T.pSub + '</p>' +
+      '<div class="techrow">' +
+        '<div class="techhead"><span>' + T.pChild + '</span></div>' +
+        '<div class="techctl" style="width:100%">' +
+          '<input type="text" class="nameinput" id="childName" maxlength="24" autocomplete="off" ' +
+            'placeholder="' + esc(T.pNamePlaceholder) + '" value="' + esc(p.name) + '">' +
+        '</div>' +
+      '</div>' +
+      '<div class="techrow">' +
+        '<div class="techhead"><span>' + T.pAge + '</span></div>' +
+        '<div class="agegrid">' +
+          AGE_BANDS.map(b => '<button type="button" class="agebtn' + (p.age === b.id ? " sel" : "") +
+            '" data-age="' + b.id + '"><b>' + T[b.labelKey] + '</b><span>' + T[b.subKey] + '</span></button>').join("") +
+        '</div>' +
+        '<div class="note" style="margin-top:10px">' + T.pAgeNote + '</div>' +
+      '</div>' +
       '<div class="optrow"><span>' + T.pSounds + '</span><button class="sw' + (S.sound ? " on" : "") + '" data-t="sound"></button></div>' +
-      techRow(T.pSoundVol, "soundVol", 0, 150, Math.round(S.soundVolume * 100), "sound", T.ariaTestSound) +
       '<div class="optrow"><span>' + T.pVoice + '</span><button class="sw' + (S.voice ? " on" : "") + '" data-t="voice"></button></div>' +
-      techRow(T.pRate, "rate", 50, 150, Math.round(S.voiceRate * 100), "rate", T.ariaTestRate) +
-      techRow(T.pPitch, "pitch", 0, 200, Math.round(S.voicePitch * 100), "pitch", T.ariaTestPitch) +
-      techRow(T.pVoiceVol, "vvol", 0, 100, Math.round(S.voiceVolume * 100), "vvol", T.ariaTestVoiceVol) +
       voiceRow() +
       '<div class="optrow"><span>' + T.pCap + '</span><button class="sw' + (d.cap ? " on" : "") + '" data-t="cap"></button></div>' +
       '<div class="optrow"><span>' + T.pToday(d.played.length, KidBrain.games.length) + '</span>' +
@@ -1125,27 +1192,23 @@ function openParents() {
       '<div class="note">' + T.pNote + '</div>' +
     '</div>';
   sh.addEventListener("input", e => {
-    const r = e.target.closest("input[type=range]");
-    if (!r) return;
-    const v = Number(r.value);
-    const label = $("#" + r.id + "val", sh);
-    if (label) label.textContent = v + "%";
-    if (r.id === "soundVol") S.soundVolume = v / 100;
-    else if (r.id === "rate") S.voiceRate = v / 100;
-    else if (r.id === "pitch") S.voicePitch = v / 100;
-    else if (r.id === "vvol") S.voiceVolume = v / 100;
+    const name = e.target.closest("#childName");
+    if (name) Profile.setName(name.value);
   });
   sh.addEventListener("change", e => {
     const sel = e.target.closest("#voiceSel");
     if (sel) Voice.setVoice(sel.value);
   });
   sh.addEventListener("click", e => {
-    const test = e.target.closest("[data-test]");
-    if (test) {
-      const k = test.dataset.test;
-      if (k === "sound") Sound.test(); else Voice.test();
+    const ab = e.target.closest("[data-age]");
+    if (ab) {
+      const wasSel = ab.classList.contains("sel");     // ritocca la fascia già scelta per annullarla
+      Profile.setAge(wasSel ? "" : ab.dataset.age);
+      sh.querySelectorAll(".agebtn").forEach(x => x.classList.toggle("sel", !wasSel && x === ab));
+      Sound.tap();
       return;
     }
+    if (e.target.closest("[data-test]")) { Voice.test(); return; }
     const t = e.target.closest("[data-t]");
     if (t) {
       const k = t.dataset.t;
