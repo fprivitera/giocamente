@@ -431,7 +431,12 @@ const STR = {
     count10ChoosePrompt: (n, numw10) => "Hai contato fino a " + numw10[n - 11] + "! Ora tocca il numero scritto.",
     emoTitle: "Come si sente?",
     emoPrompt: a => "Tocca la faccia " + a + "!",
-    emoConfirm: a => "Questa faccia è " + a + "."
+    emoConfirm: a => "Questa faccia è " + a + ".",
+    freeTitle: "Gioco libero",
+    freeHint: "Tocca quello che vuoi, senza regole!",
+    freeAlmostDone: "Quasi finito!",
+    freeDone: "Il tempo del gioco libero è finito!",
+    pFreeMinutes: "⏱️ Minuti di gioco libero"
   },
   en: {
     docTitle: "GiocaMente — games for the mind (age 3)",
@@ -503,7 +508,12 @@ const STR = {
     count10ChoosePrompt: (n, numw10) => "You counted all the way to " + numw10[n - 11] + "! Now tap the written number.",
     emoTitle: "How does it feel?",
     emoPrompt: a => "Tap the " + a + " face!",
-    emoConfirm: a => "This face is " + a + "."
+    emoConfirm: a => "This face is " + a + ".",
+    freeTitle: "Free play",
+    freeHint: "Tap whatever you like, no rules!",
+    freeAlmostDone: "Almost done!",
+    freeDone: "Free play time is up!",
+    pFreeMinutes: "⏱️ Free play minutes"
   }
 };
 let T = STR[LANG];
@@ -570,6 +580,32 @@ const Daily = {
   markPlayed(id) { const d = this.load(); if (d.played.indexOf(id) === -1) { d.played.push(id); this.save(); } },
   unlockToday() { const d = this.load(); d.played = []; this.save(); },
   setCap(v) { const d = this.load(); d.cap = v; this.save(); }
+};
+
+/* =========================================================
+   1b-2. GIOCO LIBERO — durata (minuti), impostabile dai genitori
+   ---------------------------------------------------------
+   A differenza dei giochi strutturati, il gioco libero non ha una
+   regola "una volta al giorno": è pensato come alternativa sempre
+   disponibile, delimitata solo dal tempo (default 8 minuti).
+   Dato persistito (localStorage, solo sul dispositivo): { minutes: n }
+   ========================================================= */
+const FreePlay = {
+  key: "giocamente_freeplay", mem: null, DEFAULT: 8, MIN: 1, MAX: 30,
+  clamp(n) { return Math.min(this.MAX, Math.max(this.MIN, Math.round(Number(n) || this.DEFAULT))); },
+  load() {
+    if (!this.mem) {
+      let d = null;
+      try { d = JSON.parse(localStorage.getItem(this.key)); } catch (e) {}
+      if (!d || typeof d !== "object") d = { minutes: this.DEFAULT };
+      d.minutes = this.clamp(d.minutes);
+      this.mem = d;
+    }
+    return this.mem;
+  },
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.mem)); } catch (e) {} },
+  minutes() { return this.load().minutes; },
+  setMinutes(n) { const d = this.load(); d.minutes = this.clamp(n); this.save(); return d.minutes; }
 };
 
 /* =========================================================
@@ -995,6 +1031,13 @@ function renderHome() {
     });
     grid.appendChild(t);
   });
+  /* Gioco libero: alternativa sempre disponibile ai giochi strutturati, non
+     soggetta alla regola "una volta al giorno" — la limita solo il tempo. */
+  const freeTile = mk("button", "gtile",
+    '<span class="em">🎈</span><span class="nm">' + T.freeTitle + '</span>');
+  freeTile.style.setProperty("--tint", "var(--c1)");
+  freeTile.addEventListener("click", () => { Sound.tap(); startFreePlay(); });
+  grid.appendChild(freeTile);
   $("#screen").innerHTML = "";
   $("#screen").appendChild(wrap);
   $("#prompt") && ($("#prompt").textContent = "");
@@ -1113,6 +1156,82 @@ KidBrain.register({
     };
   }
 });
+
+/* =========================================================
+   6b. GIOCO LIBERO — nessuna regola, nessun punteggio
+   ---------------------------------------------------------
+   Alternativa ai giochi strutturati: una tavolozza di forme/colori/
+   texture che il bambino può toccare a piacere. Ogni tocco rigenera
+   solo quella tessera (nessuna risposta giusta o sbagliata) e dà un
+   piccolo feedback sonoro. La sessione si chiude da sola dopo i minuti
+   impostati dai genitori (FreePlay.minutes(), default 8) con un avviso
+   gentile 15 secondi prima — mai un timer visibile che metta fretta.
+   ========================================================= */
+const FREE_TILES = 9;
+
+function randomShapeTile() {
+  return { s: pick(Object.keys(SHAPES)), c: pick(COLORS), tx: pick(TEXTURES) };
+}
+
+function startFreePlay() {
+  const token = S.token = Symbol("free");
+  const totalMs = FreePlay.minutes() * 60000;
+  const deadline = Date.now() + totalMs;
+
+  $("#screen").innerHTML =
+    '<div class="stage">' +
+      '<div class="promptbar"><span id="prompt"></span></div>' +
+      '<div class="play" id="play"></div>' +
+    '</div>';
+  $(".promptbar").insertBefore(Mascot.make("mini"), $("#prompt"));
+  $("#prompt").textContent = T.freeHint;
+  Voice.say(T.freeHint);
+
+  const play = $("#play");
+  for (let i = 0; i < FREE_TILES; i++) {
+    const tile = mk("div", "tile");
+    const draw = () => { const o = randomShapeTile(); tile.innerHTML = svgShape(o.s, o.c.h, o.tx); };
+    draw();
+    tile.addEventListener("click", () => {
+      if (S.token !== token) return;
+      Sound.tap();
+      tile.classList.remove("right"); void tile.offsetWidth; tile.classList.add("right");
+      draw();
+    });
+    play.appendChild(tile);
+  }
+
+  let warned = false;
+  const timer = setInterval(() => {
+    if (S.token !== token) { clearInterval(timer); return; }
+    const remaining = deadline - Date.now();
+    if (!warned && remaining <= 15000) { warned = true; Voice.say(T.freeAlmostDone); }
+    if (remaining <= 0) { clearInterval(timer); endFreePlay(token); }
+  }, 1000);
+}
+
+function endFreePlay(token) {
+  if (S.token !== token) return;
+  armIdle(null);
+  Sound.win(); FX.confetti(60);
+  Voice.say(T.freeDone + " " + pick(T.mascotCheer));
+  const sh = mk("div", "sheet");
+  sh.innerHTML =
+    '<div class="sheetbox">' +
+      '<div class="mslot"></div>' +
+      '<h2>' + T.yay + '</h2><p>' + T.freeDone + '</p>' +
+      '<button class="bigbtn a" data-a="again">' + T.btnAgain + '</button>' +
+      '<button class="bigbtn b" data-a="home">' + T.btnMore + '</button>' +
+    '</div>';
+  sh.querySelector(".mslot").appendChild(Mascot.make("huge", () => Voice.say(pick(T.mascotCheer))));
+  sh.addEventListener("click", e => {
+    const b = e.target.closest("[data-a]"); if (!b) return;
+    sh.remove();
+    if (b.dataset.a === "again") startFreePlay(); else renderHome();
+  });
+  document.body.appendChild(sh);
+  Mascot.react("happy");
+}
 
 /* =========================================================
    7. GIOCO 2 — Memory a coppie
@@ -1386,6 +1505,9 @@ function openParents() {
       '<div class="optrow"><span>' + T.pSounds + '</span><button class="sw' + (S.sound ? " on" : "") + '" data-t="sound"></button></div>' +
       '<div class="optrow"><span>' + T.pVoice + '</span><button class="sw' + (S.voice ? " on" : "") + '" data-t="voice"></button></div>' +
       voiceRow() +
+      '<div class="optrow"><span>' + T.pFreeMinutes + '</span>' +
+        '<input type="number" class="nameinput" id="freeMinutes" min="' + FreePlay.MIN + '" max="' + FreePlay.MAX + '" ' +
+          'step="1" style="width:80px;text-align:center" value="' + FreePlay.minutes() + '"></div>' +
       '<div class="optrow"><span>' + T.pCap + '</span><button class="sw' + (d.cap ? " on" : "") + '" data-t="cap"></button></div>' +
       '<div class="optrow"><span>' + T.pToday(d.played.length, KidBrain.games.length) + '</span>' +
         '<button class="bigbtn b" data-a="unlock" style="min-width:0;min-height:0;padding:10px 18px;font-size:16px;margin:0">' + T.pUnlock + '</button></div>' +
@@ -1400,6 +1522,8 @@ function openParents() {
   sh.addEventListener("change", e => {
     const sel = e.target.closest("#voiceSel");
     if (sel) Voice.setVoice(sel.value);
+    const fm = e.target.closest("#freeMinutes");
+    if (fm) fm.value = FreePlay.setMinutes(fm.value);       // riscrive il valore chiarito (es. fuori range)
   });
   sh.addEventListener("click", e => {
     const ab = e.target.closest("[data-age]");
