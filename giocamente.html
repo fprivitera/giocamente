@@ -343,6 +343,7 @@ const STR = {
     ariaLang: "Passa all'inglese", langSet: "Ho cambiato lingua. Ora parlo italiano.",
     speechLang: "it-IT", voiceName: /italian/i, preferredVoiceName: /alice/i,
     praise: ["Bravo!", "Benissimo!", "Sì, giusto!", "Perfetto!", "Che bravo!"],
+    praiseName: n => ["Bravo " + n + "!", "Benissimo " + n + "!", "Sì, giusto " + n + "!", "Perfetto " + n + "!", "Che bravo, " + n + "!"],
     tryAgain: "Prova ancora!",
     lookHint: "Guarda, è questo che brilla!",
     sayWinLocked: "Evviva! Hai finito. Questo gioco torna domani!",
@@ -393,6 +394,9 @@ const STR = {
     countPrompt: (n, w, numw) => n === 1
       ? "Tocca dove c'è " + w.one
       : "Tocca dove ci sono " + numw[n] + " " + w.many,
+    count10Title: "Conta oltre 10",
+    numw10: ["undici", "dodici", "tredici", "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove", "venti"],
+    count10Prompt: (n, numw10) => "Conta i pallini e tocca il numero " + numw10[n - 11],
     emoTitle: "Come si sente?",
     emoPrompt: a => "Tocca la faccia " + a + "!",
     emoConfirm: a => "Questa faccia è " + a + "."
@@ -404,6 +408,7 @@ const STR = {
     ariaLang: "Switch to Italian", langSet: "Language changed. I speak English now.",
     speechLang: "en-US", voiceName: /english/i, preferredVoiceName: /samantha/i,
     praise: ["Well done!", "Great job!", "Yes, that's right!", "Perfect!", "Amazing!"],
+    praiseName: n => ["Well done, " + n + "!", "Great job, " + n + "!", "Yes, that's right, " + n + "!", "Perfect, " + n + "!", "Amazing, " + n + "!"],
     tryAgain: "Try again!",
     lookHint: "Look, it's the one that's glowing!",
     sayWinLocked: "Hooray! You finished. This game comes back tomorrow!",
@@ -454,6 +459,9 @@ const STR = {
     countPrompt: (n, w, numw) => n === 1
       ? "Tap where there is " + w.one
       : "Tap where there are " + numw[n] + " " + w.many,
+    count10Title: "Count past 10",
+    numw10: ["eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"],
+    count10Prompt: (n, numw10) => "Count the dots and tap the number " + numw10[n - 11],
     emoTitle: "How does it feel?",
     emoPrompt: a => "Tap the " + a + " face!",
     emoConfirm: a => "This face is " + a + "."
@@ -564,6 +572,12 @@ const Profile = {
 function greetLine() {
   const nm = Profile.load().name.trim();
   return nm ? T.hiName(nm) : pick(T.mascotHi);
+}
+
+/** Lode dopo una risposta giusta: usa il nome del bambino se i genitori l'hanno inserito. */
+function praiseText() {
+  const nm = Profile.load().name.trim();
+  return nm ? pick(T.praiseName(nm)) : pick(T.praise);
 }
 
 /* =========================================================
@@ -807,7 +821,7 @@ function makeCtx(game, level, round, total, resolve) {
              così la frase non viene tagliata e il gioco non resta mai fermo
              se la sintesi vocale manca o si blocca. */
           const t0 = Date.now(), cap = o.say ? 3600 : 1800;
-          Voice.say(pick(T.praise) + (o.say ? " " + o.say : ""),
+          Voice.say(praiseText() + (o.say ? " " + o.say : ""),
             () => setTimeout(ctx.solved, Math.max(0, 950 - (Date.now() - t0))));
           setTimeout(ctx.solved, cap);
         } else {
@@ -1131,6 +1145,47 @@ KidBrain.register({
     });
     ctx.el.appendChild(row);
     ctx.prompt(T.emoPrompt(target[LANG]));
+  }
+});
+
+/* =========================================================
+   8c. GIOCO 5 — Conta oltre 10 (11-20)
+   ---------------------------------------------------------
+   Stessa idea di "Quanti sono?", ma il confronto non è più fra
+   due gruppi da contare: qui la scelta è il numero SCRITTO che
+   rappresenta la quantità di pallini mostrata. Pensato per chi
+   ha già superato le prime cardinalità (1-5) e sta imparando a
+   riconoscere i numerali oltre il 10.
+   ========================================================= */
+KidBrain.register({
+  id: "count10", titleKey: "count10Title", icon: "🔢", tint: "var(--c5)", rounds: 5,
+  playRound(ctx) {
+    const MIN = 11;
+    const max = ctx.level === 1 ? 14 : (ctx.level === 2 ? 17 : 20);
+    const pool = shuffle(range(MIN, max));
+    const target = pool[0];
+    const nums = shuffle([target, pool[1], pool[2] != null ? pool[2] : (target === MIN ? max : MIN)]
+      .filter((v, i, a) => v != null && a.indexOf(v) === i));
+
+    const model = mk("div", "model");
+    model.style.cssText = "width:min(88vw,420px);height:auto";
+    const pips = mk("div", "pips");
+    for (let i = 0; i < target; i++) pips.appendChild(mk("i", "pip"));
+    model.appendChild(pips);
+
+    const row = mk("div", "row");
+    nums.forEach(k => {
+      const t = mk("div", "tile");
+      const face = mk("span", "face", String(k));
+      face.style.fontWeight = "900";
+      t.appendChild(face);
+      ctx.choice(t, k === target);
+      row.appendChild(t);
+    });
+
+    ctx.el.appendChild(model);
+    ctx.el.appendChild(row);
+    ctx.prompt(T.count10Prompt(target, T.numw10));
   }
 });
 
