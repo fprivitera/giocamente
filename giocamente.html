@@ -411,6 +411,12 @@ const STR = {
       'Nessuna pubblicità, nessun link esterno, nessun acquisto.<br>' +
       'La regola "una partita al giorno" chiude da sola la sessione dopo pochi minuti: se volete continuare, ' +
       'usate "Sblocca" o spegnete l\'interruttore. Meglio se giocate accanto al bambino.',
+    wTitle: "Benvenuti su GiocaMente!",
+    wIntro: "Raccontateci qualcosa del vostro bambino: aiuta i giochi a partire dal livello giusto. " +
+      "Potete lasciare tutto vuoto e sistemarlo più tardi.",
+    wSettingsNote: "Quando vi servono le impostazioni per i genitori — voce, suoni, una partita al giorno e altro — " +
+      "tenete premuto ⚙️👫 in alto a destra per 1,2 secondi.",
+    wStart: "Inizia a giocare",
     matchTitle: "Trova l'uguale", matchPrompt: "Tocca quello uguale a questo!",
     memoryTitle: "Le coppie", memoryPrompt: "Trova gli animali uguali!",
     foundPrefix: ["Bravo, ", "Trovato! ", "Sì! "],
@@ -477,6 +483,12 @@ const STR = {
       'No ads, no external links, no purchases.<br>' +
       'The "one session per day" rule ends the session on its own after a few minutes: to keep playing, ' +
       'use "Unlock" or turn the switch off. It\'s best to sit and play next to your child.',
+    wTitle: "Welcome to GiocaMente!",
+    wIntro: "Tell us a bit about your child: it helps the games start at the right level. " +
+      "You can leave everything blank and set it up later.",
+    wSettingsNote: "Whenever you need the parents' settings — voice, sounds, one session per day and more — " +
+      "press and hold ⚙️👫 in the top right for 1.2 seconds.",
+    wStart: "Start playing",
     matchTitle: "Find the match", matchPrompt: "Tap the one that matches this!",
     memoryTitle: "The pairs", memoryPrompt: "Find the matching animals!",
     foundPrefix: ["Well done, ", "Found it! ", "Yes! "],
@@ -582,9 +594,10 @@ const Profile = {
     if (!this.mem) {
       let d = null;
       try { d = JSON.parse(localStorage.getItem(this.key)); } catch (e) {}
-      if (!d || typeof d !== "object") d = { name: "", age: "" };
+      if (!d || typeof d !== "object") d = { name: "", age: "", onboarded: false };
       if (typeof d.name !== "string") d.name = "";
       if (!AGE_BANDS.some(b => b.id === d.age)) d.age = "";
+      if (typeof d.onboarded !== "boolean") d.onboarded = false;
       this.mem = d;
     }
     return this.mem;
@@ -592,7 +605,11 @@ const Profile = {
   save() { try { localStorage.setItem(this.key, JSON.stringify(this.mem)); } catch (e) {} },
   setName(n) { const d = this.load(); d.name = String(n || "").slice(0, 24); this.save(); },
   setAge(id) { const d = this.load(); d.age = AGE_BANDS.some(b => b.id === id) ? id : ""; this.save(); },
-  minLevel() { const b = AGE_BANDS.find(x => x.id === this.load().age); return b ? b.minLevel : 1; }
+  minLevel() { const b = AGE_BANDS.find(x => x.id === this.load().age); return b ? b.minLevel : 1; },
+  /** true finché il dispositivo non ha mai visto la schermata di benvenuto: un cookie/localStorage
+      nuovo (o svuotato) la fa ricomparire, così a un nuovo dispositivo si richiede di nuovo nome ed età. */
+  isOnboarded() { return this.load().onboarded; },
+  setOnboarded() { const d = this.load(); d.onboarded = true; this.save(); }
 };
 
 /** Saluto della mascotte: usa il nome se i genitori l'hanno inserito. */
@@ -1418,6 +1435,58 @@ function openParents() {
   document.body.appendChild(sh);
 }
 
+/** Schermata di primo avvio: appare una sola volta per dispositivo (localStorage
+    vuoto/nuovo), chiede nome ed età come l'area genitori e spiega dove trovarla
+    di nuovo. Stessi campi/markup di openParents, per non far imparare due volte
+    la stessa cosa a genitori diversi. */
+function openWelcome() {
+  const p = Profile.load();
+  const sh = mk("div", "sheet");
+  sh.innerHTML =
+    '<div class="sheetbox">' +
+      '<div class="mslot"></div>' +
+      '<h2>' + T.wTitle + '</h2><p>' + T.wIntro + '</p>' +
+      '<div class="techrow">' +
+        '<div class="techhead"><span>' + T.pChild + '</span></div>' +
+        '<div class="techctl" style="width:100%">' +
+          '<input type="text" class="nameinput" id="childName" maxlength="24" autocomplete="off" ' +
+            'placeholder="' + esc(T.pNamePlaceholder) + '" value="' + esc(p.name) + '">' +
+        '</div>' +
+      '</div>' +
+      '<div class="techrow">' +
+        '<div class="techhead"><span>' + T.pAge + '</span></div>' +
+        '<div class="agegrid">' +
+          AGE_BANDS.map(b => '<button type="button" class="agebtn' + (p.age === b.id ? " sel" : "") +
+            '" data-age="' + b.id + '"><b>' + T[b.labelKey] + '</b><span>' + T[b.subKey] + '</span></button>').join("") +
+        '</div>' +
+        '<div class="note" style="margin-top:10px">' + T.pAgeNote + '</div>' +
+      '</div>' +
+      '<div class="note" style="margin-top:14px">' + T.wSettingsNote + '</div>' +
+      '<div style="margin-top:18px"><button class="bigbtn a" data-a="start">' + T.wStart + '</button></div>' +
+    '</div>';
+  sh.querySelector(".mslot").appendChild(Mascot.make("huge"));
+  sh.addEventListener("input", e => {
+    const name = e.target.closest("#childName");
+    if (name) Profile.setName(name.value);
+  });
+  sh.addEventListener("click", e => {
+    const ab = e.target.closest("[data-age]");
+    if (ab) {
+      const wasSel = ab.classList.contains("sel");
+      Profile.setAge(wasSel ? "" : ab.dataset.age);
+      sh.querySelectorAll(".agebtn").forEach(x => x.classList.toggle("sel", !wasSel && x === ab));
+      Sound.tap();
+      return;
+    }
+    if (e.target.closest('[data-a="start"]')) {
+      Profile.setOnboarded();
+      sh.remove();
+      if ($(".home")) renderHome();          // aggiorna il saluto se il nome è stato inserito
+    }
+  });
+  document.body.appendChild(sh);
+}
+
 /* =========================================================
    10. BOOT
    ========================================================= */
@@ -1456,6 +1525,7 @@ function openParents() {
     gear.addEventListener(ev, () => { clearTimeout(hold); gear.classList.remove("holding"); }));
 
   renderHome();
+  if (!Profile.isOnboarded()) openWelcome();   // dispositivo nuovo (o localStorage svuotato): si presenta e chiede nome/età
 
   /* offline: registra il service worker (solo su https; su file:// non serve) */
   if ("serviceWorker" in navigator && location.protocol === "https:")
