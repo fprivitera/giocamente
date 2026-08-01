@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#fff7ed">
 <title>GiocaMente — giochi per la mente, pensati per i 3 anni</title>
-<meta name="description" content="Tre mini-giochi cognitivi in italiano per bambini di 3 anni. Progettati sulle evidenze di sviluppo motorio e cognitivo dell'età prescolare. Nessun dato raccolto, nessuna pubblicità, nessun acquisto.">
+<meta name="description" content="Quattro mini-giochi cognitivi in italiano per bambini di 3 anni. Progettati sulle evidenze di sviluppo motorio e cognitivo dell'età prescolare. Nessun dato raccolto, nessuna pubblicità, nessun acquisto.">
 <style>
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -48,6 +48,14 @@ header.hero{
 .navlinks a{color:var(--soft);text-decoration:none}
 .navlinks a:hover{color:var(--ink)}
 @media(max-width:640px){.navlinks{display:none}}
+.navright{display:flex;align-items:center;gap:10px}
+.langbtn{
+  border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;
+  font-family:inherit;font-weight:900;font-size:14px;letter-spacing:.06em;
+  padding:12px 15px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.05);flex:0 0 auto;
+  transition:transform .12s ease
+}
+.langbtn:active{transform:translateY(2px)}
 
 .herogrid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,5vw,56px);align-items:center;padding-bottom:clamp(44px,8vw,90px)}
 @media(max-width:860px){.herogrid{grid-template-columns:1fr}}
@@ -67,7 +75,10 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--c4),var(--c6),var
 .mock{
   background:#fff;border-radius:28px;box-shadow:var(--shadow);padding:18px;border:1px solid var(--line);
 }
-.mockbar{background:#fff7ed;border-radius:16px;padding:12px 16px;font-weight:900;font-size:16px;margin-bottom:16px;border:1px solid var(--line)}
+.mockbar{background:#fff7ed;border-radius:16px;padding:12px 16px;font-weight:900;font-size:16px;margin-bottom:16px;border:1px solid var(--line);
+  display:flex;align-items:center;gap:10px}
+.mockowl{width:34px;flex:0 0 auto;display:block}
+.mockowl svg{width:100%;height:auto;display:block}
 .mockmodel{
   width:clamp(60px,8vw,84px);aspect-ratio:1;margin:0 auto 14px;border-radius:18px;
   background:#fffdf5;border:4px dashed rgba(43,33,24,.18);display:grid;place-items:center;padding:10px
@@ -86,6 +97,8 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--c4),var(--c6),var
 
 /* ---------- griglie ---------- */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:clamp(16px,2.4vw,26px)}
+/* quattro schede: 2x2 invece di una riga da tre con un orfano sotto */
+@media(min-width:740px){.cards.four{grid-template-columns:repeat(2,1fr)}}
 .card{
   background:#fff;border:1px solid var(--line);border-radius:24px;padding:clamp(20px,3vw,30px);
   box-shadow:var(--shadow);border-bottom:6px solid var(--tint,var(--c1))
@@ -96,6 +109,18 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--c4),var(--c6),var
   display:inline-block;font-size:13px;font-weight:800;color:var(--ink);
   background:#fff7ed;border:1px solid var(--line);border-radius:999px;padding:5px 12px
 }
+
+/* ---------- fascia mascotte ---------- */
+.buboband{
+  display:flex;align-items:center;gap:clamp(16px,3vw,34px);margin-top:clamp(20px,3vw,30px);
+  background:linear-gradient(120deg,#f1ecff,#fff 62%);border:1px solid var(--line);
+  border-radius:24px;padding:clamp(20px,3vw,32px);box-shadow:var(--shadow)
+}
+.buboart{width:clamp(88px,13vw,138px);flex:0 0 auto}
+.buboart svg{width:100%;height:auto;display:block}
+.buboband h3{margin:0 0 .35em}
+.buboband p{margin:0;color:var(--soft)}
+@media(max-width:620px){.buboband{flex-direction:column;text-align:center}}
 
 /* ---------- tabella evidenze ---------- */
 .ev{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
@@ -150,12 +175,15 @@ footer a{color:var(--soft)}
     <nav class="nav">
       <div class="brand"><span class="dot">🧠</span> GiocaMente</div>
       <div class="navlinks">
-        <a href="#giochi" data-i18n="nav_games">I tre giochi</a>
+        <a href="#giochi" data-i18n="nav_games">I giochi</a>
         <a href="#evidenze" data-i18n="nav_why">Perché così</a>
         <a href="#privacy" data-i18n="nav_privacy">Privacy</a>
         <a href="#uso" data-i18n="nav_use">Come si usa</a>
       </div>
-      <a class="cta" href="giocamente.html" data-i18n="cta_play">▶ Gioca ora</a>
+      <div class="navright">
+        <button id="btnLang" class="langbtn" type="button" aria-label="Switch to English">EN</button>
+        <a class="cta" href="giocamente.html" data-i18n="cta_play">▶ Gioca ora</a>
+      </div>
     </nav>
 
     <div class="herogrid">
@@ -175,7 +203,18 @@ footer a{color:var(--soft)}
       </div>
 
       <div class="mock" aria-hidden="true">
-        <div class="mockbar" data-i18n="mockbar">🔊 Tocca quello uguale a questo!</div>
+        <div class="mockbar">
+          <span class="mockowl"><svg viewBox="0 0 100 106">
+            <path d="M23 33 L27 9 L45 24 Z" fill="#7c5cf5"/><path d="M77 33 L73 9 L55 24 Z" fill="#7c5cf5"/>
+            <ellipse cx="50" cy="58" rx="37" ry="39" fill="#a78bfa"/>
+            <ellipse cx="15" cy="62" rx="9" ry="21" fill="#8b6cf6"/><ellipse cx="85" cy="62" rx="9" ry="21" fill="#8b6cf6"/>
+            <ellipse cx="50" cy="71" rx="23" ry="24" fill="#f3efff"/>
+            <circle cx="36" cy="44" r="14.5" fill="#fff"/><circle cx="36" cy="45" r="6.8" fill="#2b2118"/>
+            <circle cx="64" cy="44" r="14.5" fill="#fff"/><circle cx="64" cy="45" r="6.8" fill="#2b2118"/>
+            <path d="M50 54 L57 63 L43 63 Z" fill="#fb8500"/>
+          </svg></span>
+          <span data-i18n="mockbar">Tocca quello uguale a questo!</span>
+        </div>
         <div class="mockmodel"><svg viewBox="0 0 100 100" fill="#3b82f6"><circle cx="50" cy="50" r="42"/></svg></div>
         <div class="mocktiles">
           <div class="mocktile"><svg viewBox="0 0 100 100" fill="#3b82f6"><polygon points="50,8 94,90 6,90"/></svg></div>
@@ -192,13 +231,13 @@ footer a{color:var(--soft)}
 <section id="giochi">
   <div class="wrap">
     <span class="eyebrow" data-i18n="eyebrow_train">Cosa allena</span>
-    <h2 data-i18n="h2_games">Tre giochi, tre abilità diverse</h2>
+    <h2 data-i18n="h2_games">Quattro giochi, quattro abilità diverse</h2>
     <p class="lead" style="margin-bottom:34px" data-i18n="lead_games">
       Ogni gioco ha tre livelli che salgono da soli durante la partita, senza che il bambino
       debba scegliere nulla. Una partita dura fra i due e i quattro minuti.
     </p>
 
-    <div class="cards">
+    <div class="cards four">
       <div class="card" style="--tint:var(--c2)">
         <div class="ico">🔷</div>
         <h3 data-i18n="g1_t">Trova l'uguale</h3>
@@ -216,6 +255,38 @@ footer a{color:var(--soft)}
         <h3 data-i18n="g3_t">Quanti sono?</h3>
         <p data-i18n="g3_p">La richiesta è parlata e accompagnata da pallini, così la quantità si vede anche senza saper leggere i numeri. Si parte da 1-3, il campo in cui a tre anni si riconosce “a colpo d'occhio”.</p>
         <span class="tagline" data-i18n="g3_tag">Cardinalità · corrispondenza uno-a-uno</span>
+      </div>
+      <div class="card" style="--tint:var(--c1)">
+        <div class="ico">😊</div>
+        <h3 data-i18n="g4_t">Come si sente?</h3>
+        <p data-i18n="g4_p">Una faccia per ogni emozione. Si comincia da contenta e triste, le due espressioni che a tre anni si riconoscono per prime e con più sicurezza; rabbia, sorpresa, paura e sonno arrivano solo all'ultimo livello. Ogni risposta giusta rinomina l'emozione ad alta voce.</p>
+        <span class="tagline" data-i18n="g4_tag">Riconoscimento delle emozioni · lessico emotivo</span>
+      </div>
+    </div>
+
+    <div class="buboband">
+      <div class="buboart" aria-hidden="true">
+        <svg viewBox="0 0 100 106">
+          <path d="M23 33 L27 9 L45 24 Z" fill="#7c5cf5"/>
+          <path d="M77 33 L73 9 L55 24 Z" fill="#7c5cf5"/>
+          <ellipse cx="50" cy="58" rx="37" ry="39" fill="#a78bfa"/>
+          <ellipse cx="15" cy="62" rx="9" ry="21" fill="#8b6cf6"/>
+          <ellipse cx="85" cy="62" rx="9" ry="21" fill="#8b6cf6"/>
+          <ellipse cx="50" cy="71" rx="23" ry="24" fill="#f3efff"/>
+          <circle cx="36" cy="44" r="14.5" fill="#fff"/><circle cx="36" cy="45" r="6.8" fill="#2b2118"/><circle cx="33" cy="42" r="2.4" fill="#fff"/>
+          <circle cx="64" cy="44" r="14.5" fill="#fff"/><circle cx="64" cy="45" r="6.8" fill="#2b2118"/><circle cx="61" cy="42" r="2.4" fill="#fff"/>
+          <path d="M50 54 L57 63 L43 63 Z" fill="#fb8500"/>
+          <path d="M40 96 v5 M34 101 h12 M60 96 v5 M54 101 h12" stroke="#fb8500" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div>
+        <h3 data-i18n="bubo_t">Bubo, il gufo che dà le consegne</h3>
+        <p data-i18n="bubo_p">
+          Accoglie il bambino nella schermata iniziale, siede accanto a ogni richiesta e festeggia alla fine.
+          Toccarlo ripete la consegna ad alta voce: è lo stesso comando del tasto 🔊, ma nella forma che a tre
+          anni si cerca per prima — un personaggio grande, colorato, sempre nello stesso posto. Saltella quando
+          la risposta è giusta e piega la testa quando non lo è: non fa mai una faccia triste.
+        </p>
       </div>
     </div>
   </div>
@@ -285,8 +356,9 @@ footer a{color:var(--soft)}
       <div data-i18n="np6"><span>✓</span> Funziona anche senza connessione, dalla seconda visita</div>
     </div>
     <p class="microcopy" style="margin-top:22px" data-i18n="micro_priv">
-      Sul dispositivo resta un unico dato: il registro delle partite di oggi, che serve alla regola
-      "una al giorno". Non lascia il dispositivo e non identifica nessuno. Le stelle e le impostazioni
+      Sul dispositivo restano due dati soli: il registro delle partite di oggi, che serve alla regola
+      "una al giorno", e la lingua scelta col tasto in alto. Non lasciano il dispositivo e non identificano
+      nessuno. Le stelle e le impostazioni
       audio invece si azzerano ricaricando — a tre anni un punteggio che si accumula nel tempo non motiva,
       ma può far pesare le sessioni brevi.
     </p>
@@ -353,13 +425,19 @@ footer a{color:var(--soft)}
 
 <script>
 /* Lingua: la pagina è scritta in italiano; se il dispositivo non è
-   in italiano, i testi marcati con data-i18n passano all'inglese. */
+   in italiano, i testi marcati con data-i18n passano all'inglese.
+   Il tasto nel nav forza la scelta e la ricorda, condividendo la
+   stessa chiave del gioco: cambiarla di là vale anche di qua. */
 (function () {
-  var l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
-  if (l === "it" || l.indexOf("it-") === 0) return;
+  var KEY = "giocamente_lang";
+  function stored() { try { var v = localStorage.getItem(KEY); return (v === "it" || v === "en") ? v : null; } catch (e) { return null; } }
+  function detect() {
+    var l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
+    return (l === "it" || l.indexOf("it-") === 0) ? "it" : "en";
+  }
 
   var EN = {
-    nav_games: "The three games",
+    nav_games: "The games",
     nav_why: "Why it's built this way",
     nav_privacy: "Privacy",
     nav_use: "How to use it",
@@ -369,9 +447,9 @@ footer a{color:var(--soft)}
     lead_hero: "GiocaMente is a small collection of cognitive games designed around what a three-year-old can actually do: tap, recognise, remember. Nothing to read, nothing to drag, no timers. And no way to lose.",
     cta_how: "How it was designed",
     microcopy_hero: "Works offline · No installation · No account · Free",
-    mockbar: "🔊 Tap the one that matches this!",
+    mockbar: "Tap the one that matches this!",
     eyebrow_train: "What it trains",
-    h2_games: "Three games, three different skills",
+    h2_games: "Four games, four different skills",
     lead_games: "Each game has three levels that step up on their own during play, without the child having to choose anything. A session lasts two to four minutes.",
     g1_t: "Find the match",
     g1_p: "A model at the top, three options below. First only the shape changes, then only the colour, finally both together.",
@@ -382,6 +460,11 @@ footer a{color:var(--soft)}
     g3_t: "How many?",
     g3_p: "The request is spoken and backed by dots, so the quantity can be seen even before knowing how to read numbers. It starts at 1-3, the range a three-year-old recognises “at a glance”.",
     g3_tag: "Cardinality · one-to-one correspondence",
+    g4_t: "How does it feel?",
+    g4_p: "One face per emotion. It starts with happy and sad, the two expressions three-year-olds recognise first and most reliably; anger, surprise, fear and sleepiness only turn up at the last level. Every right answer names the emotion out loud again.",
+    g4_tag: "Emotion recognition · emotional vocabulary",
+    bubo_t: "Bubo, the owl who gives the prompts",
+    bubo_p: "Bubo greets the child on the first screen, sits next to every request and celebrates at the end. Tapping Bubo repeats the prompt out loud: it's the same command as the 🔊 button, but in the form a three-year-old reaches for first — a big, colourful character, always in the same place. Bubo hops when the answer is right and tilts the head when it isn't: never a sad face.",
     eyebrow_why: "Why it's made this way",
     h2_why: "Every choice answers a piece of data",
     lead_why: "At three, fingers are small, aim is imprecise and patience is short. Almost every game “for kids” is really a shrunken game for adults. Here it's the other way round: first the constraint, then the game.",
@@ -414,7 +497,7 @@ footer a{color:var(--soft)}
     np4: "<span>✓</span> No links leading out of the game",
     np5: "<span>✓</span> No sign-up, no email",
     np6: "<span>✓</span> Works without a connection, from the second visit",
-    micro_priv: "Only one piece of data stays on the device: today's play log, used for the \"one per day\" rule. It never leaves the device and identifies no one. Stars and audio settings reset on reload — at three, a score that builds up over time doesn't motivate, but it can make short sessions feel heavy.",
+    micro_priv: "Only two things stay on the device: today's play log, used for the \"one per day\" rule, and the language picked with the button at the top. Neither leaves the device nor identifies anyone. Stars and audio settings reset on reload — at three, a score that builds up over time doesn't motivate, but it can make short sessions feel heavy.",
     eyebrow_use: "How to use it",
     h2_use: "A little, together, unhurried",
     lead_use: "Out of the box each game can be completed <b>once a day</b>, like the daily puzzles in newspapers: the session ends on its own after a few minutes, with no negotiating the stop. From the parents' area you can unlock the day or turn the rule off entirely.",
@@ -432,13 +515,37 @@ footer a{color:var(--soft)}
     foot_src: "Sources cited on this page"
   };
 
-  document.documentElement.lang = "en";
-  document.title = "GiocaMente — brain games designed for age 3";
+  /* L'italiano è già nel markup: lo si mette da parte per poterci tornare. */
+  var nodes = document.querySelectorAll("[data-i18n]");
+  nodes.forEach(function (el) { el.dataset.itHtml = el.innerHTML; });
   var md = document.querySelector('meta[name="description"]');
-  if (md) md.setAttribute("content", "Three cognitive mini-games for 3-year-olds. Designed on the evidence about preschool motor and cognitive development. No data collected, no ads, no purchases.");
-  document.querySelectorAll("[data-i18n]").forEach(function (el) {
-    var t = EN[el.getAttribute("data-i18n")];
-    if (t != null) el.innerHTML = t;
+  var IT = { title: document.title, desc: md ? md.getAttribute("content") : "" };
+  var btn = document.getElementById("btnLang");
+
+  function apply(lang, remember) {
+    document.documentElement.lang = lang;
+    if (lang === "en") {
+      document.title = "GiocaMente — brain games designed for age 3";
+      if (md) md.setAttribute("content", "Four cognitive mini-games for 3-year-olds. Designed on the evidence about preschool motor and cognitive development. No data collected, no ads, no purchases.");
+      nodes.forEach(function (el) {
+        var t = EN[el.getAttribute("data-i18n")];
+        if (t != null) el.innerHTML = t;
+      });
+    } else {
+      document.title = IT.title;
+      if (md) md.setAttribute("content", IT.desc);
+      nodes.forEach(function (el) { el.innerHTML = el.dataset.itHtml; });
+    }
+    if (btn) {
+      btn.textContent = lang === "it" ? "EN" : "IT";
+      btn.setAttribute("aria-label", lang === "it" ? "Switch to English" : "Passa all'italiano");
+    }
+    if (remember) { try { localStorage.setItem(KEY, lang); } catch (e) {} }
+  }
+
+  apply(stored() || detect(), false);
+  if (btn) btn.addEventListener("click", function () {
+    apply(document.documentElement.lang === "it" ? "en" : "it", true);
   });
 })();
 
