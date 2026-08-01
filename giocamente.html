@@ -362,9 +362,9 @@ const STR = {
     pTitle: "Area genitori", pSub: "Impostazioni",
     pChild: "👶 Nome del bambino (facoltativo)", pNamePlaceholder: "Es. Sofia",
     pAge: "🎂 Età del bambino",
-    age1L: "Meno di 3 anni", age1S: "fino a 36 mesi",
-    age2L: "3 anni", age2S: "36–42 mesi",
-    age3L: "3 anni e mezzo", age3S: "42–48 mesi",
+    age1L: "Meno di 3 anni", age1S: "sotto i 36 mesi",
+    age2L: "3 anni", age2S: "36–41 mesi",
+    age3L: "3 anni e mezzo", age3S: "42–47 mesi",
     age4L: "4 anni o più", age4S: "48+ mesi",
     pAgeNote: "Serve solo a far partire ogni gioco dal livello giusto: più il bambino è grande, più si possono " +
       "saltare i primi round, quelli più facili. I giochi restano pensati per i 3 anni, cambia solo da dove si parte.",
@@ -423,9 +423,9 @@ const STR = {
     pTitle: "Parents' area", pSub: "Settings",
     pChild: "👶 Child's name (optional)", pNamePlaceholder: "E.g. Sophie",
     pAge: "🎂 Child's age",
-    age1L: "Under 3", age1S: "up to 36 months",
-    age2L: "3 years old", age2S: "36–42 months",
-    age3L: "3 and a half", age3S: "42–48 months",
+    age1L: "Under 3", age1S: "under 36 months",
+    age2L: "3 years old", age2S: "36–41 months",
+    age3L: "3 and a half", age3S: "42–47 months",
     age4L: "4 or older", age4S: "48+ months",
     pAgeNote: "This only changes which level each game starts from: the older the child, the more the easier " +
       "first rounds can be skipped. The games are still designed for age 3 — only the starting point changes.",
@@ -1202,8 +1202,9 @@ function openParents() {
   sh.addEventListener("click", e => {
     const ab = e.target.closest("[data-age]");
     if (ab) {
-      Profile.setAge(ab.dataset.age);
-      sh.querySelectorAll(".agebtn").forEach(x => x.classList.toggle("sel", x === ab));
+      const wasSel = ab.classList.contains("sel");     // ritocca la fascia già scelta per annullarla
+      Profile.setAge(wasSel ? "" : ab.dataset.age);
+      sh.querySelectorAll(".agebtn").forEach(x => x.classList.toggle("sel", !wasSel && x === ab));
       Sound.tap();
       return;
     }
