@@ -343,7 +343,7 @@ const STR = {
     ariaHome: "Torna ai giochi", ariaRepeat: "Ripeti la richiesta", ariaGear: "Impostazioni (tieni premuto)",
     ariaMascot: "Bubo — tocca per riascoltare",
     ariaLang: "Passa all'inglese", langSet: "Ho cambiato lingua. Ora parlo italiano.",
-    speechLang: "it-IT", voiceName: /italian/i,
+    speechLang: "it-IT", voiceName: /italian/i, preferredVoiceName: /alice/i,
     praise: ["Bravo!", "Benissimo!", "Sì, giusto!", "Perfetto!", "Che bravo!"],
     tryAgain: "Prova ancora!",
     lookHint: "Guarda, è questo che brilla!",
@@ -407,7 +407,7 @@ const STR = {
     ariaHome: "Back to the games", ariaRepeat: "Repeat the prompt", ariaGear: "Settings (press and hold)",
     ariaMascot: "Bubo — tap to hear it again",
     ariaLang: "Switch to Italian", langSet: "Language changed. I speak English now.",
-    speechLang: "en-US", voiceName: /english/i,
+    speechLang: "en-US", voiceName: /english/i, preferredVoiceName: /samantha/i,
     praise: ["Well done!", "Great job!", "Yes, that's right!", "Perfect!", "Amazing!"],
     tryAgain: "Try again!",
     lookHint: "Look, it's the one that's glowing!",
@@ -623,7 +623,9 @@ const Voice = {
       speechSynthesis.addEventListener("voiceschanged", () => this.pick());
     }
   },
-  /** Sceglie la voce del dispositivo per la lingua attiva, rispettando la scelta manuale in area genitori. */
+  /** Sceglie la voce del dispositivo per la lingua attiva, rispettando la scelta manuale in area genitori.
+      Fra le voci della lingua attiva preferisce quella con il nome indicato in T.preferredVoiceName
+      (Alice per l'italiano, Samantha per l'inglese), se il dispositivo la offre. */
   pick() {
     if (!this.ok) return;
     const list = speechSynthesis.getVoices() || [];
@@ -632,7 +634,9 @@ const Voice = {
       if (chosen) { this.v = chosen; return; }
     }
     const langRe = new RegExp("^" + LANG + "[-_]?", "i");
-    this.v = list.find(x => langRe.test(x.lang)) || list.find(x => T.voiceName.test(x.name)) || null;
+    const langMatches = list.filter(x => langRe.test(x.lang));
+    this.v = langMatches.find(x => T.preferredVoiceName.test(x.name)) ||
+      langMatches[0] || list.find(x => T.voiceName.test(x.name)) || null;
   },
   /** Imposta la voce scelta a mano dal genitore (voiceURI), o torna alla scelta automatica se vuoto. */
   setVoice(uri) { this.overrideURI = uri || null; this.pick(); },
