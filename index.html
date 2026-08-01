@@ -48,6 +48,14 @@ header.hero{
 .navlinks a{color:var(--soft);text-decoration:none}
 .navlinks a:hover{color:var(--ink)}
 @media(max-width:640px){.navlinks{display:none}}
+.navright{display:flex;align-items:center;gap:10px}
+.langbtn{
+  border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;
+  font-family:inherit;font-weight:900;font-size:14px;letter-spacing:.06em;
+  padding:12px 15px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.05);flex:0 0 auto;
+  transition:transform .12s ease
+}
+.langbtn:active{transform:translateY(2px)}
 
 .herogrid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,5vw,56px);align-items:center;padding-bottom:clamp(44px,8vw,90px)}
 @media(max-width:860px){.herogrid{grid-template-columns:1fr}}
@@ -172,7 +180,10 @@ footer a{color:var(--soft)}
         <a href="#privacy" data-i18n="nav_privacy">Privacy</a>
         <a href="#uso" data-i18n="nav_use">Come si usa</a>
       </div>
-      <a class="cta" href="giocamente.html" data-i18n="cta_play">▶ Gioca ora</a>
+      <div class="navright">
+        <button id="btnLang" class="langbtn" type="button" aria-label="Switch to English">EN</button>
+        <a class="cta" href="giocamente.html" data-i18n="cta_play">▶ Gioca ora</a>
+      </div>
     </nav>
 
     <div class="herogrid">
@@ -345,8 +356,9 @@ footer a{color:var(--soft)}
       <div data-i18n="np6"><span>✓</span> Funziona anche senza connessione, dalla seconda visita</div>
     </div>
     <p class="microcopy" style="margin-top:22px" data-i18n="micro_priv">
-      Sul dispositivo resta un unico dato: il registro delle partite di oggi, che serve alla regola
-      "una al giorno". Non lascia il dispositivo e non identifica nessuno. Le stelle e le impostazioni
+      Sul dispositivo restano due dati soli: il registro delle partite di oggi, che serve alla regola
+      "una al giorno", e la lingua scelta col tasto in alto. Non lasciano il dispositivo e non identificano
+      nessuno. Le stelle e le impostazioni
       audio invece si azzerano ricaricando — a tre anni un punteggio che si accumula nel tempo non motiva,
       ma può far pesare le sessioni brevi.
     </p>
@@ -413,10 +425,16 @@ footer a{color:var(--soft)}
 
 <script>
 /* Lingua: la pagina è scritta in italiano; se il dispositivo non è
-   in italiano, i testi marcati con data-i18n passano all'inglese. */
+   in italiano, i testi marcati con data-i18n passano all'inglese.
+   Il tasto nel nav forza la scelta e la ricorda, condividendo la
+   stessa chiave del gioco: cambiarla di là vale anche di qua. */
 (function () {
-  var l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
-  if (l === "it" || l.indexOf("it-") === 0) return;
+  var KEY = "giocamente_lang";
+  function stored() { try { var v = localStorage.getItem(KEY); return (v === "it" || v === "en") ? v : null; } catch (e) { return null; } }
+  function detect() {
+    var l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
+    return (l === "it" || l.indexOf("it-") === 0) ? "it" : "en";
+  }
 
   var EN = {
     nav_games: "The games",
@@ -479,7 +497,7 @@ footer a{color:var(--soft)}
     np4: "<span>✓</span> No links leading out of the game",
     np5: "<span>✓</span> No sign-up, no email",
     np6: "<span>✓</span> Works without a connection, from the second visit",
-    micro_priv: "Only one piece of data stays on the device: today's play log, used for the \"one per day\" rule. It never leaves the device and identifies no one. Stars and audio settings reset on reload — at three, a score that builds up over time doesn't motivate, but it can make short sessions feel heavy.",
+    micro_priv: "Only two things stay on the device: today's play log, used for the \"one per day\" rule, and the language picked with the button at the top. Neither leaves the device nor identifies anyone. Stars and audio settings reset on reload — at three, a score that builds up over time doesn't motivate, but it can make short sessions feel heavy.",
     eyebrow_use: "How to use it",
     h2_use: "A little, together, unhurried",
     lead_use: "Out of the box each game can be completed <b>once a day</b>, like the daily puzzles in newspapers: the session ends on its own after a few minutes, with no negotiating the stop. From the parents' area you can unlock the day or turn the rule off entirely.",
@@ -497,13 +515,37 @@ footer a{color:var(--soft)}
     foot_src: "Sources cited on this page"
   };
 
-  document.documentElement.lang = "en";
-  document.title = "GiocaMente — brain games designed for age 3";
+  /* L'italiano è già nel markup: lo si mette da parte per poterci tornare. */
+  var nodes = document.querySelectorAll("[data-i18n]");
+  nodes.forEach(function (el) { el.dataset.itHtml = el.innerHTML; });
   var md = document.querySelector('meta[name="description"]');
-  if (md) md.setAttribute("content", "Four cognitive mini-games for 3-year-olds. Designed on the evidence about preschool motor and cognitive development. No data collected, no ads, no purchases.");
-  document.querySelectorAll("[data-i18n]").forEach(function (el) {
-    var t = EN[el.getAttribute("data-i18n")];
-    if (t != null) el.innerHTML = t;
+  var IT = { title: document.title, desc: md ? md.getAttribute("content") : "" };
+  var btn = document.getElementById("btnLang");
+
+  function apply(lang, remember) {
+    document.documentElement.lang = lang;
+    if (lang === "en") {
+      document.title = "GiocaMente — brain games designed for age 3";
+      if (md) md.setAttribute("content", "Four cognitive mini-games for 3-year-olds. Designed on the evidence about preschool motor and cognitive development. No data collected, no ads, no purchases.");
+      nodes.forEach(function (el) {
+        var t = EN[el.getAttribute("data-i18n")];
+        if (t != null) el.innerHTML = t;
+      });
+    } else {
+      document.title = IT.title;
+      if (md) md.setAttribute("content", IT.desc);
+      nodes.forEach(function (el) { el.innerHTML = el.dataset.itHtml; });
+    }
+    if (btn) {
+      btn.textContent = lang === "it" ? "EN" : "IT";
+      btn.setAttribute("aria-label", lang === "it" ? "Switch to English" : "Passa all'italiano");
+    }
+    if (remember) { try { localStorage.setItem(KEY, lang); } catch (e) {} }
+  }
+
+  apply(stored() || detect(), false);
+  if (btn) btn.addEventListener("click", function () {
+    apply(document.documentElement.lang === "it" ? "en" : "it", true);
   });
 })();
 

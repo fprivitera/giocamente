@@ -55,6 +55,14 @@ body{
   transition:transform .12s ease;
 }
 .iconbtn:active{transform:translateY(3px);box-shadow:0 6px 0 rgba(0,0,0,.10)}
+.iconbtn.lang{font-size:19px;font-weight:900;letter-spacing:.02em;color:var(--ink)}
+/* con cinque comandi in barra i telefoni stretti vanno in overflow */
+@media (max-width:430px){
+  #hud{gap:8px;padding-inline:10px}
+  .iconbtn{width:52px;height:52px;border-radius:17px;font-size:23px}
+  .iconbtn.lang{font-size:17px}
+  #stars{padding:8px 12px;font-size:clamp(18px,4vmin,24px)}
+}
 .iconbtn.holding::after{
   content:"";position:absolute;inset:-4px;border-radius:24px;
   border:5px solid var(--c2);clip-path:inset(0 0 0 0);
@@ -266,6 +274,7 @@ body{
     <button id="btnHome" class="iconbtn" aria-label="Torna ai giochi">🏠</button>
     <button id="btnRepeat" class="iconbtn" aria-label="Ripeti la richiesta">🔊</button>
     <div id="stars">⭐ <span id="starcount">0</span></div>
+    <button id="btnLang" class="iconbtn lang" aria-label="Cambia lingua">EN</button>
     <button id="btnGear" class="iconbtn" aria-label="Impostazioni (tieni premuto)">⚙️</button>
   </header>
   <main id="screen"></main>
@@ -290,17 +299,30 @@ const range   = (a, b) => { const o = []; for (let i = a; i <= b; i++) o.push(i)
    1a. LINGUA — italiano se il dispositivo è in italiano,
        inglese in tutti gli altri casi. Tutto il testo visibile
        e parlato passa da T (STR[LANG]).
+   ---------------------------------------------------------
+   La scelta fatta col tasto in barra vince sempre sulla
+   rilevazione automatica e viene ricordata: il caso che conta
+   è il dispositivo configurato in una lingua e il bambino che
+   ne parla un'altra, e lì ri-sceglierla a ogni sessione sarebbe
+   una seccatura. LANG e T cambiano a runtime: nessun ricaricamento.
    ========================================================= */
-const LANG = (() => {
+const LangPref = {
+  key: "giocamente_lang",
+  get() { try { const v = localStorage.getItem(this.key); return (v === "it" || v === "en") ? v : null; } catch (e) { return null; } },
+  set(v) { try { localStorage.setItem(this.key, v); } catch (e) {} }
+};
+function detectLang() {
   const l = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase();
   return (l === "it" || l.indexOf("it-") === 0) ? "it" : "en";
-})();
+}
+let LANG = LangPref.get() || detectLang();
 
 const STR = {
   it: {
     docTitle: "GiocaMente — giochi per la mente (3 anni)",
     ariaHome: "Torna ai giochi", ariaRepeat: "Ripeti la richiesta", ariaGear: "Impostazioni (tieni premuto)",
     ariaMascot: "Bubo — tocca per riascoltare",
+    ariaLang: "Passa all'inglese", langSet: "Ho cambiato lingua. Ora parlo italiano.",
     speechLang: "it-IT", voiceName: /italian/i,
     praise: ["Bravo!", "Benissimo!", "Sì, giusto!", "Perfetto!", "Che bravo!"],
     tryAgain: "Prova ancora!",
@@ -325,8 +347,9 @@ const STR = {
     pToday: (n, tot) => "🔓 Partite di oggi (" + n + "/" + tot + " fatte)",
     pUnlock: "Sblocca", pUnlocked: "Sbloccate ✓",
     pStars: "⭐ Stelle raccolte", pClose: "Chiudi",
-    pNote: 'Nulla viene inviato in rete. Sul dispositivo resta soltanto il registro delle partite di oggi, ' +
-      'che serve alla regola "una al giorno"; stelle e impostazioni audio si azzerano ricaricando la pagina. ' +
+    pNote: 'Nulla viene inviato in rete. Sul dispositivo restano soltanto il registro delle partite di oggi, ' +
+      'che serve alla regola "una al giorno", e la lingua scelta col tasto in barra; stelle e impostazioni ' +
+      'audio si azzerano ricaricando la pagina. ' +
       'Nessuna pubblicità, nessun link esterno, nessun acquisto.<br>' +
       'La regola "una partita al giorno" chiude da sola la sessione dopo pochi minuti: se volete continuare, ' +
       'usate "Sblocca" o spegnete l\'interruttore. Meglio se giocate accanto al bambino.',
@@ -346,6 +369,7 @@ const STR = {
     docTitle: "GiocaMente — games for the mind (age 3)",
     ariaHome: "Back to the games", ariaRepeat: "Repeat the prompt", ariaGear: "Settings (press and hold)",
     ariaMascot: "Bubo — tap to hear it again",
+    ariaLang: "Switch to Italian", langSet: "Language changed. I speak English now.",
     speechLang: "en-US", voiceName: /english/i,
     praise: ["Well done!", "Great job!", "Yes, that's right!", "Perfect!", "Amazing!"],
     tryAgain: "Try again!",
@@ -370,8 +394,9 @@ const STR = {
     pToday: (n, tot) => "🔓 Today's sessions (" + n + "/" + tot + " done)",
     pUnlock: "Unlock", pUnlocked: "Unlocked ✓",
     pStars: "⭐ Stars collected", pClose: "Close",
-    pNote: 'Nothing is sent over the network. The only thing kept on the device is today\'s play log, ' +
-      'used for the "one per day" rule; stars and audio settings reset when the page reloads. ' +
+    pNote: 'Nothing is sent over the network. The only things kept on the device are today\'s play log, ' +
+      'used for the "one per day" rule, and the language picked with the button in the bar; stars and ' +
+      'audio settings reset when the page reloads. ' +
       'No ads, no external links, no purchases.<br>' +
       'The "one session per day" rule ends the session on its own after a few minutes: to keep playing, ' +
       'use "Unlock" or turn the switch off. It\'s best to sit and play next to your child.',
@@ -388,7 +413,30 @@ const STR = {
     emoConfirm: a => "This face is " + a + "."
   }
 };
-const T = STR[LANG];
+let T = STR[LANG];
+
+/** Cambia lingua a caldo: stringhe, voce, titoli, attributi. */
+function applyLang(code) {
+  if (code !== "it" && code !== "en") return;
+  LANG = code; T = STR[code];
+  LangPref.set(code);
+  document.documentElement.lang = code;
+  document.title = T.docTitle;
+  $("#btnHome").setAttribute("aria-label", T.ariaHome);
+  $("#btnRepeat").setAttribute("aria-label", T.ariaRepeat);
+  $("#btnGear").setAttribute("aria-label", T.ariaGear);
+  syncLangBtn();
+  Voice.pick();            // riseleziona la voce del dispositivo per la nuova lingua
+  Voice.stop();
+  renderHome();            // una partita in corso aveva consegne nella lingua vecchia
+}
+
+/** Il tasto mostra la lingua verso cui si passa, non quella attiva. */
+function syncLangBtn() {
+  const b = $("#btnLang"); if (!b) return;
+  b.textContent = (LANG === "it" ? "en" : "it").toUpperCase();
+  b.setAttribute("aria-label", T.ariaLang);
+}
 
 /* Stato di sessione: stelle e impostazioni audio restano in memoria, si azzerano al reload. */
 const S = { stars: 0, sound: true, voice: true, token: null, resolve: null };
@@ -461,16 +509,21 @@ const Sound = {
    3. VOCE — Web Speech API nella lingua rilevata
    ========================================================= */
 const Voice = {
-  v: null, ok: ("speechSynthesis" in window),
+  v: null, bound: false, ok: ("speechSynthesis" in window),
   init() {
     if (!this.ok) return;
+    this.pick();
+    if (!this.bound) {                      // un solo listener, anche cambiando lingua più volte
+      this.bound = true;
+      speechSynthesis.addEventListener("voiceschanged", () => this.pick());
+    }
+  },
+  /** Sceglie la voce del dispositivo per la lingua attiva. */
+  pick() {
+    if (!this.ok) return;
     const langRe = new RegExp("^" + LANG + "[-_]?", "i");
-    const grab = () => {
-      const list = speechSynthesis.getVoices() || [];
-      this.v = list.find(x => langRe.test(x.lang)) || list.find(x => T.voiceName.test(x.name)) || null;
-    };
-    grab();
-    speechSynthesis.addEventListener("voiceschanged", grab);
+    const list = speechSynthesis.getVoices() || [];
+    this.v = list.find(x => langRe.test(x.lang)) || list.find(x => T.voiceName.test(x.name)) || null;
   },
   /** done() viene richiamato a fine frase — o subito, se la voce non c'è.
       Serve al motore per non cambiare turno mentre sta ancora parlando. */
@@ -571,7 +624,8 @@ const Mascot = {
    Contratto di un gioco:
    {
      id      : string        identificativo univoco
-     title   : string        etichetta mostrata in home
+     titleKey: string        chiave in STR.it / STR.en: il titolo si
+                             risolve a ogni render, così segue il cambio lingua
      icon    : string        emoji della tessera
      tint    : string        colore CSS del bordo tessera
      rounds  : number        turni per partita (default 5)
@@ -701,7 +755,7 @@ function celebrate(game) {
   sh.innerHTML =
     '<div class="sheetbox">' +
       '<div class="mslot"></div>' +
-      '<h2>' + T.yay + '</h2><p>' + T.completed(game.title) + (locked ? T.seeTomorrow : "") + '</p>' +
+      '<h2>' + T.yay + '</h2><p>' + T.completed(T[game.titleKey]) + (locked ? T.seeTomorrow : "") + '</p>' +
       (locked ? '' : '<button class="bigbtn a" data-a="again">' + T.btnAgain + '</button>') +
       '<button class="bigbtn b" data-a="home">' + T.btnMore + '</button>' +
     '</div>';
@@ -736,7 +790,7 @@ function renderHome() {
   KidBrain.games.forEach(g => {
     const locked = Daily.isLocked(g.id);
     const t = mk("button", "gtile",
-      '<span class="em">' + g.icon + '</span><span class="nm">' + g.title + '</span>' +
+      '<span class="em">' + g.icon + '</span><span class="nm">' + T[g.titleKey] + '</span>' +
       (locked ? '<span class="done">' + T.doneBadge + '</span>' : ''));
     t.style.setProperty("--tint", g.tint);
     if (locked) t.classList.add("played");
@@ -773,7 +827,7 @@ const COLORS = [
 const svgShape = (s, h) => '<svg viewBox="0 0 100 100" fill="' + h + '">' + SHAPES[s] + '</svg>';
 
 KidBrain.register({
-  id: "match", title: T.matchTitle, icon: "🔷", tint: "var(--c2)", rounds: 5,
+  id: "match", titleKey: "matchTitle", icon: "🔷", tint: "var(--c2)", rounds: 5,
   playRound(ctx) {
     const shapes = shuffle(Object.keys(SHAPES));
     const cols = shuffle(COLORS);
@@ -819,7 +873,7 @@ const ANIMALS = [
 ];
 
 KidBrain.register({
-  id: "memory", title: T.memoryTitle, icon: "🐼", tint: "var(--c4)", rounds: 3,
+  id: "memory", titleKey: "memoryTitle", icon: "🐼", tint: "var(--c4)", rounds: 3,
   playRound(ctx) {
     const pairs = ctx.level >= 3 ? 4 : 3;
     const set = shuffle(ANIMALS).slice(0, pairs);
@@ -883,7 +937,7 @@ const THINGS = [
 ];
 
 KidBrain.register({
-  id: "count", title: T.countTitle, icon: "🍎", tint: "var(--c3)", rounds: 5,
+  id: "count", titleKey: "countTitle", icon: "🍎", tint: "var(--c3)", rounds: 5,
   playRound(ctx) {
     const max = ctx.level === 1 ? 3 : (ctx.level === 2 ? 4 : 5);
     const thing = pick(THINGS);
@@ -936,7 +990,7 @@ const EMOTIONS = [
 ];
 
 KidBrain.register({
-  id: "emotion", title: T.emoTitle, icon: "😊", tint: "var(--c1)", rounds: 5,
+  id: "emotion", titleKey: "emoTitle", icon: "😊", tint: "var(--c1)", rounds: 5,
   playRound(ctx) {
     const n = ctx.level === 1 ? 2 : 3;
     const opts = shuffle(EMOTIONS.filter(x => x.lv <= ctx.level)).slice(0, n);
@@ -1006,6 +1060,7 @@ function openParents() {
   $("#btnHome").setAttribute("aria-label", T.ariaHome);
   $("#btnRepeat").setAttribute("aria-label", T.ariaRepeat);
   $("#btnGear").setAttribute("aria-label", T.ariaGear);
+  syncLangBtn();
 
   Voice.init();
   document.addEventListener("contextmenu", e => e.preventDefault());          // niente menu su pressione lunga
@@ -1016,6 +1071,12 @@ function openParents() {
   $("#btnRepeat").addEventListener("click", () => {
     const p = $("#prompt");
     if (p && p.textContent) Voice.say(p.textContent); else Voice.say(T.chooseGame);
+  });
+
+  $("#btnLang").addEventListener("click", () => {
+    Sound.tap();
+    applyLang(LANG === "it" ? "en" : "it");
+    Voice.say(T.langSet);                     // conferma udibile nella lingua appena scelta
   });
 
   const gear = $("#btnGear");
@@ -1042,7 +1103,7 @@ function openParents() {
 
    KidBrain.register({
      id: "colori",
-     title: "I colori",
+     titleKey: "coloriTitle",          // aggiungi la chiave a STR.it e STR.en
      icon: "🎨",
      tint: "var(--c5)",
      rounds: 5,                        // opzionale, default 5
@@ -1065,7 +1126,7 @@ function openParents() {
          ctx.choice(t, c.n === bersaglio.n);
          ctx.el.appendChild(t);
        });
-       ctx.prompt("Tocca il " + bersaglio.n);
+       ctx.prompt(T.coloriPrompt(bersaglio.n));
      }
    });
 
@@ -1077,6 +1138,8 @@ function openParents() {
    2. max 3 opzioni ai livelli 1-2, max 4 al livello 3
    3. nessun timer, nessun punteggio negativo, nessuna schermata di sconfitta
    4. la richiesta deve essere comprensibile ascoltandola, senza leggere
+      e ogni testo visibile o parlato deve passare da T, mai scritto a mano:
+      il tasto lingua in barra cambia T a caldo
    5. usa la classe .tile per le risposte: garantisce il target >= 2 cm
    ========================================================= */
 </script>
