@@ -56,11 +56,14 @@ body{
 }
 .iconbtn:active{transform:translateY(3px);box-shadow:0 6px 0 rgba(0,0,0,.10)}
 .iconbtn.lang{font-size:19px;font-weight:900;letter-spacing:.02em;color:var(--ink)}
+/* due emoji (ingranaggio + genitori) nello stesso bottone: niente a capo, un filo più piccole */
+.iconbtn.gear{font-size:20px;white-space:nowrap;letter-spacing:-2px}
 /* con cinque comandi in barra i telefoni stretti vanno in overflow */
 @media (max-width:430px){
   #hud{gap:8px;padding-inline:10px}
   .iconbtn{width:52px;height:52px;border-radius:17px;font-size:23px}
   .iconbtn.lang{font-size:17px}
+  .iconbtn.gear{font-size:17px}
   #stars{padding:8px 12px;font-size:clamp(18px,4vmin,24px)}
 }
 .iconbtn.holding::after{
@@ -315,7 +318,7 @@ body{
     <button id="btnRepeat" class="iconbtn" aria-label="Ripeti la richiesta">🔊</button>
     <div id="stars">⭐ <span id="starcount">0</span></div>
     <button id="btnLang" class="iconbtn lang" aria-label="Cambia lingua">EN</button>
-    <button id="btnGear" class="iconbtn" aria-label="Impostazioni (tieni premuto per 1,2 secondi)">⚙️</button>
+    <button id="btnGear" class="iconbtn gear" aria-label="Impostazioni (tieni premuto per 1,2 secondi)">⚙️👫</button>
   </header>
   <main id="screen"></main>
 </div>
@@ -408,6 +411,12 @@ const STR = {
       'Nessuna pubblicità, nessun link esterno, nessun acquisto.<br>' +
       'La regola "una partita al giorno" chiude da sola la sessione dopo pochi minuti: se volete continuare, ' +
       'usate "Sblocca" o spegnete l\'interruttore. Meglio se giocate accanto al bambino.',
+    wTitle: "Benvenuti su GiocaMente!",
+    wIntro: "Raccontateci qualcosa del vostro bambino: aiuta i giochi a partire dal livello giusto. " +
+      "Potete lasciare tutto vuoto e sistemarlo più tardi.",
+    wSettingsNote: "Quando vi servono le impostazioni per i genitori — voce, suoni, una partita al giorno e altro — " +
+      "tenete premuto ⚙️👫 in alto a destra per 1,2 secondi.",
+    wStart: "Inizia a giocare",
     matchTitle: "Trova l'uguale", matchPrompt: "Tocca quello uguale a questo!",
     memoryTitle: "Le coppie", memoryPrompt: "Trova gli animali uguali!",
     foundPrefix: ["Bravo, ", "Trovato! ", "Sì! "],
@@ -422,7 +431,12 @@ const STR = {
     count10ChoosePrompt: (n, numw10) => "Hai contato fino a " + numw10[n - 11] + "! Ora tocca il numero scritto.",
     emoTitle: "Come si sente?",
     emoPrompt: a => "Tocca la faccia " + a + "!",
-    emoConfirm: a => "Questa faccia è " + a + "."
+    emoConfirm: a => "Questa faccia è " + a + ".",
+    freeTitle: "Gioco libero",
+    freeHint: "Tocca quello che vuoi, senza regole!",
+    freeAlmostDone: "Quasi finito!",
+    freeDone: "Il tempo del gioco libero è finito!",
+    pFreeMinutes: "⏱️ Minuti di gioco libero"
   },
   en: {
     docTitle: "GiocaMente — games for the mind (age 3)",
@@ -474,6 +488,12 @@ const STR = {
       'No ads, no external links, no purchases.<br>' +
       'The "one session per day" rule ends the session on its own after a few minutes: to keep playing, ' +
       'use "Unlock" or turn the switch off. It\'s best to sit and play next to your child.',
+    wTitle: "Welcome to GiocaMente!",
+    wIntro: "Tell us a bit about your child: it helps the games start at the right level. " +
+      "You can leave everything blank and set it up later.",
+    wSettingsNote: "Whenever you need the parents' settings — voice, sounds, one session per day and more — " +
+      "press and hold ⚙️👫 in the top right for 1.2 seconds.",
+    wStart: "Start playing",
     matchTitle: "Find the match", matchPrompt: "Tap the one that matches this!",
     memoryTitle: "The pairs", memoryPrompt: "Find the matching animals!",
     foundPrefix: ["Well done, ", "Found it! ", "Yes! "],
@@ -488,7 +508,12 @@ const STR = {
     count10ChoosePrompt: (n, numw10) => "You counted all the way to " + numw10[n - 11] + "! Now tap the written number.",
     emoTitle: "How does it feel?",
     emoPrompt: a => "Tap the " + a + " face!",
-    emoConfirm: a => "This face is " + a + "."
+    emoConfirm: a => "This face is " + a + ".",
+    freeTitle: "Free play",
+    freeHint: "Tap whatever you like, no rules!",
+    freeAlmostDone: "Almost done!",
+    freeDone: "Free play time is up!",
+    pFreeMinutes: "⏱️ Free play minutes"
   }
 };
 let T = STR[LANG];
@@ -558,6 +583,32 @@ const Daily = {
 };
 
 /* =========================================================
+   1b-2. GIOCO LIBERO — durata (minuti), impostabile dai genitori
+   ---------------------------------------------------------
+   A differenza dei giochi strutturati, il gioco libero non ha una
+   regola "una volta al giorno": è pensato come alternativa sempre
+   disponibile, delimitata solo dal tempo (default 8 minuti).
+   Dato persistito (localStorage, solo sul dispositivo): { minutes: n }
+   ========================================================= */
+const FreePlay = {
+  key: "giocamente_freeplay", mem: null, DEFAULT: 8, MIN: 1, MAX: 30,
+  clamp(n) { return Math.min(this.MAX, Math.max(this.MIN, Math.round(Number(n) || this.DEFAULT))); },
+  load() {
+    if (!this.mem) {
+      let d = null;
+      try { d = JSON.parse(localStorage.getItem(this.key)); } catch (e) {}
+      if (!d || typeof d !== "object") d = { minutes: this.DEFAULT };
+      d.minutes = this.clamp(d.minutes);
+      this.mem = d;
+    }
+    return this.mem;
+  },
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.mem)); } catch (e) {} },
+  minutes() { return this.load().minutes; },
+  setMinutes(n) { const d = this.load(); d.minutes = this.clamp(n); this.save(); return d.minutes; }
+};
+
+/* =========================================================
    1c. PROFILO BAMBINO — nome (facoltativo) ed età
    ---------------------------------------------------------
    Dato persistito (localStorage, solo sul dispositivo):
@@ -579,9 +630,10 @@ const Profile = {
     if (!this.mem) {
       let d = null;
       try { d = JSON.parse(localStorage.getItem(this.key)); } catch (e) {}
-      if (!d || typeof d !== "object") d = { name: "", age: "" };
+      if (!d || typeof d !== "object") d = { name: "", age: "", onboarded: false };
       if (typeof d.name !== "string") d.name = "";
       if (!AGE_BANDS.some(b => b.id === d.age)) d.age = "";
+      if (typeof d.onboarded !== "boolean") d.onboarded = false;
       this.mem = d;
     }
     return this.mem;
@@ -589,7 +641,11 @@ const Profile = {
   save() { try { localStorage.setItem(this.key, JSON.stringify(this.mem)); } catch (e) {} },
   setName(n) { const d = this.load(); d.name = String(n || "").slice(0, 24); this.save(); },
   setAge(id) { const d = this.load(); d.age = AGE_BANDS.some(b => b.id === id) ? id : ""; this.save(); },
-  minLevel() { const b = AGE_BANDS.find(x => x.id === this.load().age); return b ? b.minLevel : 1; }
+  minLevel() { const b = AGE_BANDS.find(x => x.id === this.load().age); return b ? b.minLevel : 1; },
+  /** true finché il dispositivo non ha mai visto la schermata di benvenuto: un cookie/localStorage
+      nuovo (o svuotato) la fa ricomparire, così a un nuovo dispositivo si richiede di nuovo nome ed età. */
+  isOnboarded() { return this.load().onboarded; },
+  setOnboarded() { const d = this.load(); d.onboarded = true; this.save(); }
 };
 
 /** Saluto della mascotte: usa il nome se i genitori l'hanno inserito. */
@@ -861,8 +917,15 @@ function makeCtx(game, level, round, total, resolve) {
       });
     },
 
-    /** Chiude il turno. */
-    solved() { if (ctx._done) return; ctx._done = true; armIdle(null); resolve(); }
+    /** Chiude il turno. onSolved(wrongs), se il gioco lo imposta, viene
+        chiamato prima di passare al turno successivo: serve ai giochi che
+        gestiscono da soli l'avanzamento di livello in base alla correttezza
+        della risposta (0 errori = risposta corretta al primo tocco). */
+    solved() {
+      if (ctx._done) return; ctx._done = true; armIdle(null);
+      if (ctx.onSolved) ctx.onSolved(wrongs);
+      resolve();
+    }
   };
   return ctx;
 }
@@ -968,6 +1031,13 @@ function renderHome() {
     });
     grid.appendChild(t);
   });
+  /* Gioco libero: alternativa sempre disponibile ai giochi strutturati, non
+     soggetta alla regola "una volta al giorno" — la limita solo il tempo. */
+  const freeTile = mk("button", "gtile",
+    '<span class="em">🎈</span><span class="nm">' + T.freeTitle + '</span>');
+  freeTile.style.setProperty("--tint", "var(--c1)");
+  freeTile.addEventListener("click", () => { Sound.tap(); startFreePlay(); });
+  grid.appendChild(freeTile);
   $("#screen").innerHTML = "";
   $("#screen").appendChild(wrap);
   $("#prompt") && ($("#prompt").textContent = "");
@@ -982,49 +1052,186 @@ const SHAPES = {
   triangolo: '<polygon points="50,8 94,90 6,90"/>',
   stella:    '<polygon points="50,4 61,37 96,37 68,58 79,93 50,72 21,93 32,58 4,37 39,37"/>',
   cuore:     '<path d="M50 92 C6 62 6 28 28 19 C40 14 50 22 50 31 C50 22 60 14 72 19 C94 28 94 62 50 92 Z"/>',
-  luna:      '<path d="M64 6 A46 46 0 1 0 64 94 A37 37 0 1 1 64 6 Z"/>'
+  luna:      '<path d="M64 6 A46 46 0 1 0 64 94 A37 37 0 1 1 64 6 Z"/>',
+  rombo:     '<polygon points="50,4 96,50 50,96 4,50"/>',
+  esagono:   '<polygon points="50,4 90,27 90,73 50,96 10,73 10,27"/>'
 };
 const COLORS = [
   { n: "rosso", h: "#ef4444" }, { n: "blu", h: "#3b82f6" }, { n: "giallo", h: "#f5c211" },
   { n: "verde", h: "#22c55e" }, { n: "arancione", h: "#f97316" }, { n: "viola", h: "#a855f7" }
 ];
-const svgShape = (s, h) => '<svg viewBox="0 0 100 100" fill="' + h + '">' + SHAPES[s] + '</svg>';
+/* "pieno" = tinta unita; le altre due sono pattern SVG (righe diagonali, pois),
+   una variabile visiva in più oltre a forma e colore. */
+const TEXTURES = ["pieno", "righe", "pois"];
+let texSeq = 0;
+const svgShape = (s, h, tex) => {
+  const shape = SHAPES[s];
+  if (!tex || tex === "pieno") return '<svg viewBox="0 0 100 100" fill="' + h + '">' + shape + '</svg>';
+  const id = "tex" + (texSeq++);
+  const pattern = tex === "righe"
+    ? '<pattern id="' + id + '" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
+        '<rect width="16" height="16" fill="' + h + '"/><rect width="8" height="16" fill="#fff" opacity=".55"/></pattern>'
+    : '<pattern id="' + id + '" width="24" height="24" patternUnits="userSpaceOnUse">' +
+        '<rect width="24" height="24" fill="' + h + '"/><circle cx="12" cy="12" r="6" fill="#fff" opacity=".65"/></pattern>';
+  return '<svg viewBox="0 0 100 100"><defs>' + pattern + '</defs><g fill="url(#' + id + ')">' + shape + '</g></svg>';
+};
+
+/* Livello per il gioco delle forme: non sale un tot per round come nel
+   motore generico, ma in base a come il bambino risponde davvero.
+   2 risposte corrette al primo tocco di fila -> livello successivo.
+   Un errore nel turno -> il livello resta quello (mai una retrocessione,
+   coerente con "nessuno stato di fallimento" del motore).
+   Il progresso resta in memoria fra una partita e la successiva della
+   stessa sessione (come le stelle): con solo 5 turni a partita, azzerarlo
+   ad ogni "Ancora" renderebbe i livelli 4 e 5 (texture) irraggiungibili.
+   A inizio partita risale comunque almeno alla fascia d'età scelta dai
+   genitori (Profile.minLevel(), che può cambiare a sessione in corso),
+   senza mai abbassare un livello già raggiunto con il gioco. */
+const MATCH_MAX_LEVEL = 5;
+const matchProgress = { level: 1, streak: 0 };
 
 KidBrain.register({
   id: "match", titleKey: "matchTitle", icon: "🔷", tint: "var(--c2)", rounds: 5,
   playRound(ctx) {
+    if (ctx.round === 0) {
+      matchProgress.level = Math.min(MATCH_MAX_LEVEL, Math.max(matchProgress.level, Profile.minLevel()));
+      matchProgress.streak = 0;
+    }
+    const level = matchProgress.level;
     const shapes = shuffle(Object.keys(SHAPES));
     const cols = shuffle(COLORS);
+    const texs = shuffle(TEXTURES);
     let target, options;
 
-    if (ctx.level === 1) {                 // varia solo la FORMA
-      const c = cols[0], s = shapes.slice(0, 3);
-      target = { s: s[0], c };
-      options = s.map(x => ({ s: x, c }));
-    } else if (ctx.level === 2) {          // varia solo il COLORE
-      const s = shapes[0], cs = cols.slice(0, 3);
-      target = { s, c: cs[0] };
-      options = cs.map(c => ({ s, c }));
-    } else {                               // varia forma E colore (4 opzioni)
-      target = { s: shapes[0], c: cols[0] };
+    if (level === 1) {                     // varia solo la FORMA
+      const c = cols[0], tx = texs[0], s = shapes.slice(0, 3);
+      target = { s: s[0], c, tx };
+      options = s.map(x => ({ s: x, c, tx }));
+    } else if (level === 2) {              // varia solo il COLORE
+      const s = shapes[0], tx = texs[0], cs = cols.slice(0, 3);
+      target = { s, c: cs[0], tx };
+      options = cs.map(c => ({ s, c, tx }));
+    } else if (level === 3) {              // varia forma E colore (4 opzioni)
+      const tx = texs[0];
+      target = { s: shapes[0], c: cols[0], tx };
       options = [
-        { s: shapes[0], c: cols[0] }, { s: shapes[0], c: cols[1] },
-        { s: shapes[1], c: cols[0] }, { s: shapes[1], c: cols[1] }
+        { s: shapes[0], c: cols[0], tx }, { s: shapes[0], c: cols[1], tx },
+        { s: shapes[1], c: cols[0], tx }, { s: shapes[1], c: cols[1], tx }
+      ];
+    } else if (level === 4) {              // varia solo la TEXTURE (pieno / righe / pois)
+      const s = shapes[0], c = cols[0];
+      target = { s, c, tx: texs[0] };
+      options = texs.map(tx => ({ s, c, tx }));
+    } else {                               // livello 5: forma, colore e texture insieme
+      target = { s: shapes[0], c: cols[0], tx: texs[0] };
+      options = [
+        target,
+        { s: shapes[1], c: cols[0], tx: texs[0] },
+        { s: shapes[0], c: cols[1], tx: texs[0] },
+        { s: shapes[0], c: cols[0], tx: texs[1] }
       ];
     }
 
-    const model = mk("div", "model", svgShape(target.s, target.c.h));
+    const model = mk("div", "model", svgShape(target.s, target.c.h, target.tx));
     const row = mk("div", "row");
     shuffle(options).forEach(o => {
-      const t = mk("div", "tile", svgShape(o.s, o.c.h));
-      ctx.choice(t, o.s === target.s && o.c.n === target.c.n);
+      const t = mk("div", "tile", svgShape(o.s, o.c.h, o.tx));
+      ctx.choice(t, o.s === target.s && o.c.n === target.c.n && o.tx === target.tx);
       row.appendChild(t);
     });
     ctx.el.appendChild(model);
     ctx.el.appendChild(row);
     ctx.prompt(T.matchPrompt);
+
+    ctx.onSolved = wrongs => {
+      if (wrongs === 0) {
+        matchProgress.streak++;
+        if (matchProgress.streak >= 2) {
+          matchProgress.level = Math.min(MATCH_MAX_LEVEL, matchProgress.level + 1);
+          matchProgress.streak = 0;
+        }
+      } else {
+        matchProgress.streak = 0;          // errore nel turno: livello mantenuto, serie azzerata
+      }
+    };
   }
 });
+
+/* =========================================================
+   6b. GIOCO LIBERO — nessuna regola, nessun punteggio
+   ---------------------------------------------------------
+   Alternativa ai giochi strutturati: una tavolozza di forme/colori/
+   texture che il bambino può toccare a piacere. Ogni tocco rigenera
+   solo quella tessera (nessuna risposta giusta o sbagliata) e dà un
+   piccolo feedback sonoro. La sessione si chiude da sola dopo i minuti
+   impostati dai genitori (FreePlay.minutes(), default 8) con un avviso
+   gentile 15 secondi prima — mai un timer visibile che metta fretta.
+   ========================================================= */
+const FREE_TILES = 9;
+
+function randomShapeTile() {
+  return { s: pick(Object.keys(SHAPES)), c: pick(COLORS), tx: pick(TEXTURES) };
+}
+
+function startFreePlay() {
+  const token = S.token = Symbol("free");
+  const totalMs = FreePlay.minutes() * 60000;
+  const deadline = Date.now() + totalMs;
+
+  $("#screen").innerHTML =
+    '<div class="stage">' +
+      '<div class="promptbar"><span id="prompt"></span></div>' +
+      '<div class="play" id="play"></div>' +
+    '</div>';
+  $(".promptbar").insertBefore(Mascot.make("mini"), $("#prompt"));
+  $("#prompt").textContent = T.freeHint;
+  Voice.say(T.freeHint);
+
+  const play = $("#play");
+  for (let i = 0; i < FREE_TILES; i++) {
+    const tile = mk("div", "tile");
+    const draw = () => { const o = randomShapeTile(); tile.innerHTML = svgShape(o.s, o.c.h, o.tx); };
+    draw();
+    tile.addEventListener("click", () => {
+      if (S.token !== token) return;
+      Sound.tap();
+      tile.classList.remove("right"); void tile.offsetWidth; tile.classList.add("right");
+      draw();
+    });
+    play.appendChild(tile);
+  }
+
+  let warned = false;
+  const timer = setInterval(() => {
+    if (S.token !== token) { clearInterval(timer); return; }
+    const remaining = deadline - Date.now();
+    if (!warned && remaining <= 15000) { warned = true; Voice.say(T.freeAlmostDone); }
+    if (remaining <= 0) { clearInterval(timer); endFreePlay(token); }
+  }, 1000);
+}
+
+function endFreePlay(token) {
+  if (S.token !== token) return;
+  armIdle(null);
+  Sound.win(); FX.confetti(60);
+  Voice.say(T.freeDone + " " + pick(T.mascotCheer));
+  const sh = mk("div", "sheet");
+  sh.innerHTML =
+    '<div class="sheetbox">' +
+      '<div class="mslot"></div>' +
+      '<h2>' + T.yay + '</h2><p>' + T.freeDone + '</p>' +
+      '<button class="bigbtn a" data-a="again">' + T.btnAgain + '</button>' +
+      '<button class="bigbtn b" data-a="home">' + T.btnMore + '</button>' +
+    '</div>';
+  sh.querySelector(".mslot").appendChild(Mascot.make("huge", () => Voice.say(pick(T.mascotCheer))));
+  sh.addEventListener("click", e => {
+    const b = e.target.closest("[data-a]"); if (!b) return;
+    sh.remove();
+    if (b.dataset.a === "again") startFreePlay(); else renderHome();
+  });
+  document.body.appendChild(sh);
+  Mascot.react("happy");
+}
 
 /* =========================================================
    7. GIOCO 2 — Memory a coppie
@@ -1298,6 +1505,9 @@ function openParents() {
       '<div class="optrow"><span>' + T.pSounds + '</span><button class="sw' + (S.sound ? " on" : "") + '" data-t="sound"></button></div>' +
       '<div class="optrow"><span>' + T.pVoice + '</span><button class="sw' + (S.voice ? " on" : "") + '" data-t="voice"></button></div>' +
       voiceRow() +
+      '<div class="optrow"><span>' + T.pFreeMinutes + '</span>' +
+        '<input type="number" class="nameinput" id="freeMinutes" min="' + FreePlay.MIN + '" max="' + FreePlay.MAX + '" ' +
+          'step="1" style="width:80px;text-align:center" value="' + FreePlay.minutes() + '"></div>' +
       '<div class="optrow"><span>' + T.pCap + '</span><button class="sw' + (d.cap ? " on" : "") + '" data-t="cap"></button></div>' +
       '<div class="optrow"><span>' + T.pToday(d.played.length, KidBrain.games.length) + '</span>' +
         '<button class="bigbtn b" data-a="unlock" style="min-width:0;min-height:0;padding:10px 18px;font-size:16px;margin:0">' + T.pUnlock + '</button></div>' +
@@ -1312,6 +1522,8 @@ function openParents() {
   sh.addEventListener("change", e => {
     const sel = e.target.closest("#voiceSel");
     if (sel) Voice.setVoice(sel.value);
+    const fm = e.target.closest("#freeMinutes");
+    if (fm) fm.value = FreePlay.setMinutes(fm.value);       // riscrive il valore chiarito (es. fuori range)
   });
   sh.addEventListener("click", e => {
     const ab = e.target.closest("[data-age]");
@@ -1342,6 +1554,58 @@ function openParents() {
     if (e.target.closest('[data-a="close"]') || e.target === sh) {
       sh.remove();
       if ($(".home")) renderHome();          // aggiorna badge e sottotitolo se siamo in home
+    }
+  });
+  document.body.appendChild(sh);
+}
+
+/** Schermata di primo avvio: appare una sola volta per dispositivo (localStorage
+    vuoto/nuovo), chiede nome ed età come l'area genitori e spiega dove trovarla
+    di nuovo. Stessi campi/markup di openParents, per non far imparare due volte
+    la stessa cosa a genitori diversi. */
+function openWelcome() {
+  const p = Profile.load();
+  const sh = mk("div", "sheet");
+  sh.innerHTML =
+    '<div class="sheetbox">' +
+      '<div class="mslot"></div>' +
+      '<h2>' + T.wTitle + '</h2><p>' + T.wIntro + '</p>' +
+      '<div class="techrow">' +
+        '<div class="techhead"><span>' + T.pChild + '</span></div>' +
+        '<div class="techctl" style="width:100%">' +
+          '<input type="text" class="nameinput" id="childName" maxlength="24" autocomplete="off" ' +
+            'placeholder="' + esc(T.pNamePlaceholder) + '" value="' + esc(p.name) + '">' +
+        '</div>' +
+      '</div>' +
+      '<div class="techrow">' +
+        '<div class="techhead"><span>' + T.pAge + '</span></div>' +
+        '<div class="agegrid">' +
+          AGE_BANDS.map(b => '<button type="button" class="agebtn' + (p.age === b.id ? " sel" : "") +
+            '" data-age="' + b.id + '"><b>' + T[b.labelKey] + '</b><span>' + T[b.subKey] + '</span></button>').join("") +
+        '</div>' +
+        '<div class="note" style="margin-top:10px">' + T.pAgeNote + '</div>' +
+      '</div>' +
+      '<div class="note" style="margin-top:14px">' + T.wSettingsNote + '</div>' +
+      '<div style="margin-top:18px"><button class="bigbtn a" data-a="start">' + T.wStart + '</button></div>' +
+    '</div>';
+  sh.querySelector(".mslot").appendChild(Mascot.make("huge"));
+  sh.addEventListener("input", e => {
+    const name = e.target.closest("#childName");
+    if (name) Profile.setName(name.value);
+  });
+  sh.addEventListener("click", e => {
+    const ab = e.target.closest("[data-age]");
+    if (ab) {
+      const wasSel = ab.classList.contains("sel");
+      Profile.setAge(wasSel ? "" : ab.dataset.age);
+      sh.querySelectorAll(".agebtn").forEach(x => x.classList.toggle("sel", !wasSel && x === ab));
+      Sound.tap();
+      return;
+    }
+    if (e.target.closest('[data-a="start"]')) {
+      Profile.setOnboarded();
+      sh.remove();
+      if ($(".home")) renderHome();          // aggiorna il saluto se il nome è stato inserito
     }
   });
   document.body.appendChild(sh);
@@ -1385,6 +1649,7 @@ function openParents() {
     gear.addEventListener(ev, () => { clearTimeout(hold); gear.classList.remove("holding"); }));
 
   renderHome();
+  if (!Profile.isOnboarded()) openWelcome();   // dispositivo nuovo (o localStorage svuotato): si presenta e chiede nome/età
 
   /* offline: registra il service worker (solo su https; su file:// non serve) */
   if ("serviceWorker" in navigator && location.protocol === "https:")
@@ -1413,6 +1678,9 @@ function openParents() {
        //   opts.say   -> frase aggiunta alla lode ("Bravo! Sono tre mele.")
        //   opts.stamp -> simbolo dell'effetto a tutto schermo (default ⭐)
        // ctx.solved()              chiude il turno a mano (es. memory)
+       // ctx.onSolved = wrongs =>  facoltativo: chiamato alla chiusura del turno con
+       //   il numero di errori fatti (0 = risposta giusta al primo tocco). Serve ai
+       //   giochi che gestiscono da soli l'avanzamento di livello (es. "match").
        // ctx.shuffle / pick / rnd / range / sleep
 
        const bersaglio = ctx.pick(COLORS);
