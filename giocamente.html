@@ -263,6 +263,14 @@ body{
 .testbtn:active{transform:translateY(2px)}
 .voicesel{flex:1 1 auto;min-width:0;height:40px;border-radius:12px;border:1px solid rgba(0,0,0,.15);
   padding:0 8px;font-size:15px;font-family:inherit;background:#fff;color:inherit}
+.nameinput{width:100%;height:44px;border-radius:12px;border:1px solid rgba(0,0,0,.15);
+  padding:0 12px;font-size:16px;font-family:inherit;background:#fff;color:inherit}
+.agegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.agebtn{border:2px solid rgba(0,0,0,.12);background:#fff;border-radius:16px;padding:10px 6px;
+  cursor:pointer;font-family:inherit;text-align:center;color:inherit}
+.agebtn b{display:block;font-size:15px;font-weight:800}
+.agebtn span{display:block;font-size:12px;font-weight:700;opacity:.6;margin-top:2px}
+.agebtn.sel{border-color:var(--c3);background:#eafff4}
 .note{font-size:14px;opacity:.6;text-align:left;margin-top:14px;line-height:1.45}
 
 /* schermi bassi (telefono in landscape): modello e risposte su un'unica riga */
@@ -354,6 +362,15 @@ const STR = {
     mascotHi: ["Ciao! Sono Bubo.", "Eccoti! Sono Bubo il gufo.", "Ciao ciao! Giochiamo insieme?"],
     mascotCheer: ["Bubo è contento di te!", "Bubo batte le ali per te!", "Bubo dice bravo!"],
     pTitle: "Area genitori", pSub: "Impostazioni",
+    pChild: "👶 Nome del bambino (facoltativo)", pNamePlaceholder: "Es. Sofia",
+    pAge: "🎂 Età del bambino",
+    age1L: "Meno di 3 anni", age1S: "fino a 36 mesi",
+    age2L: "3 anni", age2S: "36–42 mesi",
+    age3L: "3 anni e mezzo", age3S: "42–48 mesi",
+    age4L: "4 anni o più", age4S: "48+ mesi",
+    pAgeNote: "Serve solo a far partire ogni gioco dal livello giusto: più il bambino è grande, più si possono " +
+      "saltare i primi round, quelli più facili. I giochi restano pensati per i 3 anni, cambia solo da dove si parte.",
+    hiName: n => "Ciao " + n + "! Sono Bubo.",
     pSounds: "🔉 Suoni", pVoice: "🗣️ Voce italiana",
     pSoundVol: "🔊 Volume suoni", pRate: "🎚️ Velocità voce", pPitch: "🎵 Tono voce",
     pVoiceVol: "🔈 Volume voce", pVoicePick: "🗣️ Voce del dispositivo",
@@ -366,9 +383,10 @@ const STR = {
     pToday: (n, tot) => "🔓 Partite di oggi (" + n + "/" + tot + " fatte)",
     pUnlock: "Sblocca", pUnlocked: "Sbloccate ✓",
     pStars: "⭐ Stelle raccolte", pClose: "Chiudi",
-    pNote: 'Nulla viene inviato in rete. Sul dispositivo restano soltanto il registro delle partite di oggi, ' +
-      'che serve alla regola "una al giorno", e la lingua scelta col tasto in barra; stelle e impostazioni ' +
-      'audio si azzerano ricaricando la pagina. ' +
+    pNote: 'Nulla viene inviato in rete: tutte le informazioni restano solo su questo dispositivo, dentro il ' +
+      'browser. Sul dispositivo restano il registro delle partite di oggi, che serve alla regola "una al giorno", ' +
+      'la lingua scelta col tasto in barra, e il nome e l\'età del bambino se li avete inseriti qui sopra; ' +
+      'stelle e impostazioni audio invece si azzerano ricaricando la pagina. ' +
       'Nessuna pubblicità, nessun link esterno, nessun acquisto.<br>' +
       'La regola "una partita al giorno" chiude da sola la sessione dopo pochi minuti: se volete continuare, ' +
       'usate "Sblocca" o spegnete l\'interruttore. Meglio se giocate accanto al bambino.',
@@ -408,6 +426,15 @@ const STR = {
     mascotHi: ["Hello! I'm Bubo.", "There you are! I'm Bubo the owl.", "Hi hi! Shall we play together?"],
     mascotCheer: ["Bubo is happy with you!", "Bubo is flapping wings for you!", "Bubo says well done!"],
     pTitle: "Parents' area", pSub: "Settings",
+    pChild: "👶 Child's name (optional)", pNamePlaceholder: "E.g. Sophie",
+    pAge: "🎂 Child's age",
+    age1L: "Under 3", age1S: "up to 36 months",
+    age2L: "3 years old", age2S: "36–42 months",
+    age3L: "3 and a half", age3S: "42–48 months",
+    age4L: "4 or older", age4S: "48+ months",
+    pAgeNote: "This only changes which level each game starts from: the older the child, the more the easier " +
+      "first rounds can be skipped. The games are still designed for age 3 — only the starting point changes.",
+    hiName: n => "Hi " + n + "! I'm Bubo.",
     pSounds: "🔉 Sounds", pVoice: "🗣️ Spoken voice",
     pSoundVol: "🔊 Sound volume", pRate: "🎚️ Voice speed", pPitch: "🎵 Voice pitch",
     pVoiceVol: "🔈 Voice volume", pVoicePick: "🗣️ Device voice",
@@ -420,9 +447,10 @@ const STR = {
     pToday: (n, tot) => "🔓 Today's sessions (" + n + "/" + tot + " done)",
     pUnlock: "Unlock", pUnlocked: "Unlocked ✓",
     pStars: "⭐ Stars collected", pClose: "Close",
-    pNote: 'Nothing is sent over the network. The only things kept on the device are today\'s play log, ' +
-      'used for the "one per day" rule, and the language picked with the button in the bar; stars and ' +
-      'audio settings reset when the page reloads. ' +
+    pNote: 'Nothing is sent over the network: everything stays only on this device, inside the browser. ' +
+      'The things kept on the device are today\'s play log, used for the "one per day" rule, the language ' +
+      'picked with the button in the bar, and your child\'s name and age if you entered them above; stars ' +
+      'and audio settings reset when the page reloads. ' +
       'No ads, no external links, no purchases.<br>' +
       'The "one session per day" rule ends the session on its own after a few minutes: to keep playing, ' +
       'use "Unlock" or turn the switch off. It\'s best to sit and play next to your child.',
@@ -473,7 +501,7 @@ const S = {
 /* =========================================================
    1b. CAP GIORNALIERO — una partita al giorno per gioco
    ---------------------------------------------------------
-   Unico dato persistito (localStorage, solo sul dispositivo):
+   Dato persistito (localStorage, solo sul dispositivo):
    { cap: bool, date: "YYYY-MM-DD", played: [id, ...] }
    Se localStorage non è disponibile degrada in memoria:
    il cap vale allora solo per la sessione corrente.
@@ -504,6 +532,47 @@ const Daily = {
   unlockToday() { const d = this.load(); d.played = []; this.save(); },
   setCap(v) { const d = this.load(); d.cap = v; this.save(); }
 };
+
+/* =========================================================
+   1c. PROFILO BAMBINO — nome (facoltativo) ed età
+   ---------------------------------------------------------
+   Dato persistito (localStorage, solo sul dispositivo):
+   { name: string, age: "" | "u36" | "y36" | "y42" | "y48" }
+   L'età scelta imposta il livello minimo da cui parte ogni
+   gioco (vedi startGame): con un bambino più grande si può
+   saltare i round introduttivi più facili. Il nome, se dato,
+   sostituisce il saluto generico della mascotte.
+   ========================================================= */
+const AGE_BANDS = [
+  { id: "u36", minLevel: 1, labelKey: "age1L", subKey: "age1S" },
+  { id: "y36", minLevel: 1, labelKey: "age2L", subKey: "age2S" },
+  { id: "y42", minLevel: 2, labelKey: "age3L", subKey: "age3S" },
+  { id: "y48", minLevel: 3, labelKey: "age4L", subKey: "age4S" }
+];
+const Profile = {
+  key: "giocamente_profile", mem: null,
+  load() {
+    if (!this.mem) {
+      let d = null;
+      try { d = JSON.parse(localStorage.getItem(this.key)); } catch (e) {}
+      if (!d || typeof d !== "object") d = { name: "", age: "" };
+      if (typeof d.name !== "string") d.name = "";
+      if (!AGE_BANDS.some(b => b.id === d.age)) d.age = "";
+      this.mem = d;
+    }
+    return this.mem;
+  },
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.mem)); } catch (e) {} },
+  setName(n) { const d = this.load(); d.name = String(n || "").slice(0, 24); this.save(); },
+  setAge(id) { const d = this.load(); d.age = AGE_BANDS.some(b => b.id === id) ? id : ""; this.save(); },
+  minLevel() { const b = AGE_BANDS.find(x => x.id === this.load().age); return b ? b.minLevel : 1; }
+};
+
+/** Saluto della mascotte: usa il nome se i genitori l'hanno inserito. */
+function greetLine() {
+  const nm = Profile.load().name.trim();
+  return nm ? T.hiName(nm) : pick(T.mascotHi);
+}
 
 /* =========================================================
    2. AUDIO — sintesi WebAudio, zero file esterni
@@ -783,7 +852,7 @@ async function startGame(game) {
     if (S.token !== token) return;
     drawDots(i, total);
     $("#play").innerHTML = "";
-    const level = Math.min(3, 1 + Math.floor(i / Math.ceil(total / 3)));
+    const level = Math.max(Profile.minLevel(), Math.min(3, 1 + Math.floor(i / Math.ceil(total / 3))));
     await new Promise(res => {
       S.resolve = res;
       game.playRound(makeCtx(game, level, i, total, res));
@@ -842,7 +911,7 @@ function renderHome() {
     '<div class="gamegrid"></div>');
   /* la consegna arriva dalla mascotte, non da un sottotitolo anonimo */
   const hello = wrap.querySelector(".hello");
-  hello.appendChild(Mascot.make("big", () => Voice.say(pick(T.mascotHi) + " " + line)));
+  hello.appendChild(Mascot.make("big", () => Voice.say(greetLine() + " " + line)));
   hello.appendChild(mk("div", "bubble", line));
   const grid = wrap.querySelector(".gamegrid");
   KidBrain.games.forEach(g => {
@@ -1106,10 +1175,26 @@ function voiceRow() {
 
 function openParents() {
   const d = Daily.load();
+  const p = Profile.load();
   const sh = mk("div", "sheet");
   sh.innerHTML =
     '<div class="sheetbox">' +
       '<h2>' + T.pTitle + '</h2><p>' + T.pSub + '</p>' +
+      '<div class="techrow">' +
+        '<div class="techhead"><span>' + T.pChild + '</span></div>' +
+        '<div class="techctl" style="width:100%">' +
+          '<input type="text" class="nameinput" id="childName" maxlength="24" autocomplete="off" ' +
+            'placeholder="' + esc(T.pNamePlaceholder) + '" value="' + esc(p.name) + '">' +
+        '</div>' +
+      '</div>' +
+      '<div class="techrow">' +
+        '<div class="techhead"><span>' + T.pAge + '</span></div>' +
+        '<div class="agegrid">' +
+          AGE_BANDS.map(b => '<button type="button" class="agebtn' + (p.age === b.id ? " sel" : "") +
+            '" data-age="' + b.id + '"><b>' + T[b.labelKey] + '</b><span>' + T[b.subKey] + '</span></button>').join("") +
+        '</div>' +
+        '<div class="note" style="margin-top:10px">' + T.pAgeNote + '</div>' +
+      '</div>' +
       '<div class="optrow"><span>' + T.pSounds + '</span><button class="sw' + (S.sound ? " on" : "") + '" data-t="sound"></button></div>' +
       techRow(T.pSoundVol, "soundVol", 0, 150, Math.round(S.soundVolume * 100), "sound", T.ariaTestSound) +
       '<div class="optrow"><span>' + T.pVoice + '</span><button class="sw' + (S.voice ? " on" : "") + '" data-t="voice"></button></div>' +
@@ -1125,6 +1210,8 @@ function openParents() {
       '<div class="note">' + T.pNote + '</div>' +
     '</div>';
   sh.addEventListener("input", e => {
+    const name = e.target.closest("#childName");
+    if (name) { Profile.setName(name.value); return; }
     const r = e.target.closest("input[type=range]");
     if (!r) return;
     const v = Number(r.value);
@@ -1140,6 +1227,13 @@ function openParents() {
     if (sel) Voice.setVoice(sel.value);
   });
   sh.addEventListener("click", e => {
+    const ab = e.target.closest("[data-age]");
+    if (ab) {
+      Profile.setAge(ab.dataset.age);
+      sh.querySelectorAll(".agebtn").forEach(x => x.classList.toggle("sel", x === ab));
+      Sound.tap();
+      return;
+    }
     const test = e.target.closest("[data-test]");
     if (test) {
       const k = test.dataset.test;
