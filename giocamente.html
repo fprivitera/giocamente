@@ -185,6 +185,28 @@ body{
 .items{display:flex;flex-wrap:wrap;gap:4%;justify-content:center;align-items:center;width:100%;height:100%}
 .items span{font-size:clamp(24px,6.2vmin,52px);line-height:1}
 
+/* ---------- conta oltre 10: dieci già "fermi" (ten-frame) + il resto da toccare e contare ---------- */
+.c10board{display:flex;flex-direction:column;align-items:center;gap:16px;width:min(92vw,460px)}
+.c10anchor{
+  position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
+  background:#fff6da;border:4px solid var(--c1);border-radius:18px;padding:16px 14px 12px;
+}
+.c10anchor .pip{width:clamp(16px,3.4vmin,26px);height:clamp(16px,3.4vmin,26px);background:var(--c1)}
+.c10anchor::after{
+  content:"10";position:absolute;top:-15px;left:50%;transform:translateX(-50%);
+  background:var(--c1);color:#fff;font-weight:900;font-size:14px;line-height:1;
+  border-radius:10px;padding:4px 10px;box-shadow:var(--shadow)
+}
+.c10extra{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.c10pip{
+  width:clamp(48px,10vmin,74px);height:clamp(48px,10vmin,74px);border-radius:50%;
+  border:5px solid var(--c5);background:#fff;cursor:pointer;transition:transform .14s ease;
+}
+.c10pip:active{transform:scale(.9)}
+.c10pip.done{background:var(--c5);animation:pop .4s ease}
+.c10count{font-size:clamp(30px,7.5vmin,52px);font-weight:900;color:var(--c5);min-height:1.2em}
+.tile.c10choice{animation:pop .4s ease}
+
 /* ---------- memory ---------- */
 .mgrid{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--gap);
   --cols:4;max-width:min(96vw, calc(var(--cols) * var(--mcard) + (var(--cols) - 1) * var(--gap)))}
@@ -396,7 +418,8 @@ const STR = {
       : "Tocca dove ci sono " + numw[n] + " " + w.many,
     count10Title: "Conta oltre 10",
     numw10: ["undici", "dodici", "tredici", "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove", "venti"],
-    count10Prompt: (n, numw10) => "Conta i pallini e tocca il numero " + numw10[n - 11],
+    count10CountPrompt: "Ci sono già dieci pallini. Tocca gli altri, uno alla volta, e conta con me!",
+    count10ChoosePrompt: (n, numw10) => "Hai contato fino a " + numw10[n - 11] + "! Ora tocca il numero scritto.",
     emoTitle: "Come si sente?",
     emoPrompt: a => "Tocca la faccia " + a + "!",
     emoConfirm: a => "Questa faccia è " + a + "."
@@ -461,7 +484,8 @@ const STR = {
       : "Tap where there are " + numw[n] + " " + w.many,
     count10Title: "Count past 10",
     numw10: ["eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"],
-    count10Prompt: (n, numw10) => "Count the dots and tap the number " + numw10[n - 11],
+    count10CountPrompt: "There are already ten dots. Tap the rest, one at a time, and count with me!",
+    count10ChoosePrompt: (n, numw10) => "You counted all the way to " + numw10[n - 11] + "! Now tap the written number.",
     emoTitle: "How does it feel?",
     emoPrompt: a => "Tap the " + a + " face!",
     emoConfirm: a => "This face is " + a + "."
@@ -1151,11 +1175,19 @@ KidBrain.register({
 /* =========================================================
    8c. GIOCO 5 — Conta oltre 10 (11-20)
    ---------------------------------------------------------
-   Stessa idea di "Quanti sono?", ma il confronto non è più fra
-   due gruppi da contare: qui la scelta è il numero SCRITTO che
-   rappresenta la quantità di pallini mostrata. Pensato per chi
-   ha già superato le prime cardinalità (1-5) e sta imparando a
-   riconoscere i numerali oltre il 10.
+   Prima versione: si vedevano tutti i pallini insieme e si
+   sceglieva il numero scritto "a occhio". Ma contare 15-20
+   pallini identici tutti insieme è troppo difficile a
+   quest'età, e il numero target veniva anche detto a voce
+   nella consegna: il bambino non contava affatto, indovinava.
+   Ora i dieci pallini di base sono già "fermi" in una griglia
+   (un ten-frame, così si riconoscono a colpo d'occhio senza
+   contarli uno per uno) e SOLO quelli oltre il 10 vanno
+   toccati uno alla volta: ogni tocco fa sentire il numero
+   successivo ("undici", "dodici", ...). Solo dopo aver
+   davvero contato fino in fondo compaiono le tessere con i
+   numeri scritti, per collegare la sequenza appena detta al
+   numerale corrispondente.
    ========================================================= */
 KidBrain.register({
   id: "count10", titleKey: "count10Title", icon: "🔢", tint: "var(--c5)", rounds: 5,
@@ -1166,26 +1198,53 @@ KidBrain.register({
     const target = pool[0];
     const nums = shuffle([target, pool[1], pool[2] != null ? pool[2] : (target === MIN ? max : MIN)]
       .filter((v, i, a) => v != null && a.indexOf(v) === i));
+    const extra = target - 10;
 
-    const model = mk("div", "model");
-    model.style.cssText = "width:min(88vw,420px);height:auto";
-    const pips = mk("div", "pips");
-    for (let i = 0; i < target; i++) pips.appendChild(mk("i", "pip"));
-    model.appendChild(pips);
+    const board = mk("div", "c10board");
+    const anchor = mk("div", "c10anchor");
+    for (let i = 0; i < 10; i++) anchor.appendChild(mk("i", "pip"));
+    board.appendChild(anchor);
+
+    const extraWrap = mk("div", "c10extra");
+    const extraPips = [];
+    for (let i = 0; i < extra; i++) {
+      const p = mk("div", "c10pip");
+      extraWrap.appendChild(p);
+      extraPips.push(p);
+    }
+    board.appendChild(extraWrap);
+
+    const countLabel = mk("div", "c10count", "10");
+    board.appendChild(countLabel);
 
     const row = mk("div", "row");
-    nums.forEach(k => {
-      const t = mk("div", "tile");
-      const face = mk("span", "face", String(k));
-      face.style.fontWeight = "900";
-      t.appendChild(face);
-      ctx.choice(t, k === target);
-      row.appendChild(t);
-    });
 
-    ctx.el.appendChild(model);
+    ctx.el.appendChild(board);
     ctx.el.appendChild(row);
-    ctx.prompt(T.count10Prompt(target, T.numw10));
+    ctx.prompt(T.count10CountPrompt);
+
+    let counted = 10;
+    extraPips.forEach(p => {
+      p.addEventListener("click", () => {
+        if (p.classList.contains("done") || counted >= target) return;
+        p.classList.add("done");
+        counted++;
+        Sound.tap();
+        countLabel.textContent = String(counted);
+        Voice.say(T.numw10[counted - 11]);
+        if (counted === target) {
+          nums.forEach(k => {
+            const t = mk("div", "tile c10choice");
+            const face = mk("span", "face", String(k));
+            face.style.fontWeight = "900";
+            t.appendChild(face);
+            ctx.choice(t, k === target);
+            row.appendChild(t);
+          });
+          ctx.prompt(T.count10ChoosePrompt(target, T.numw10));
+        }
+      });
+    });
   }
 });
 
