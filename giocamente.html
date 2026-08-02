@@ -827,6 +827,61 @@ const KidBrain = {
   register(g) { this.games.push(g); return this; }
 };
 
+/* =========================================================
+   5a. LIVELLO ADATTIVO — il principio dei test adattivi
+       (GMAT), tradotto a misura di bambino
+   ---------------------------------------------------------
+   Il livello non sale più col numero del turno ma con le
+   risposte: come nel GMAT, rispondere bene porta a domande
+   più difficili, andare in difficoltà a domande più facili.
+   - 2 risposte esatte al primo tocco di fila -> livello +1
+   - un errore nel turno -> livello mantenuto, serie azzerata
+   - aiuto acceso (2+ errori nel turno) -> livello -1
+   La discesa è invisibile al bambino (nessun messaggio, nessun
+   punteggio): resta coerente con "nessuno stato di fallimento",
+   semplicemente il turno dopo è più abbordabile.
+   Il progresso resta in memoria fra una partita e l'altra della
+   stessa sessione (come le stelle): con pochi turni a partita,
+   azzerarlo a ogni "Ancora" renderebbe i livelli alti
+   irraggiungibili. A inizio partita risale comunque almeno alla
+   fascia d'età scelta dai genitori (Profile.minLevel(), che può
+   cambiare a sessione in corso), senza mai abbassare un livello
+   già guadagnato giocando.
+   Ogni gioco può dichiarare maxLevel (default 3): serve a
+   "Trova l'uguale", che ha 5 gradini di difficoltà.
+   ========================================================= */
+const Adaptive = {
+  state: {},                                  // id gioco -> { level, streak }
+  UP_STREAK: 2,                               // esatte al primo tocco per salire
+  maxFor(game) { return game.maxLevel || 3; },
+  get(game) {
+    let st = this.state[game.id];
+    if (!st) st = this.state[game.id] = { level: 1, streak: 0 };
+    return st;
+  },
+  /** Da chiamare a inizio partita: applica la fascia d'età e azzera la serie. */
+  begin(game) {
+    const st = this.get(game);
+    st.level = Math.min(this.maxFor(game), Math.max(st.level, Profile.minLevel()));
+    st.streak = 0;
+    return st;
+  },
+  /** Da chiamare a fine turno con gli errori fatti (0 = giusto al primo tocco). */
+  update(game, wrongs) {
+    const st = this.get(game);
+    if (wrongs === 0) {
+      st.streak++;
+      if (st.streak >= this.UP_STREAK) {
+        st.level = Math.min(this.maxFor(game), st.level + 1);
+        st.streak = 0;
+      }
+    } else {
+      st.streak = 0;
+      if (wrongs >= 2) st.level = Math.max(1, st.level - 1);
+    }
+  }
+};
+
 /* Se il bambino non tocca nulla, la consegna viene ripetuta ogni 9 s. */
 let idleTimer = null;
 function armIdle(text) {
@@ -893,14 +948,14 @@ function makeCtx(game, level, round, total, resolve) {
       });
     },
 
-    /** Chiude il turno. onSolved(wrongs), se il gioco lo imposta, viene
-        chiamato prima di passare al turno successivo: serve ai giochi che
-        gestiscono da soli l'avanzamento di livello in base alla correttezza
-        della risposta (0 errori = risposta corretta al primo tocco). */
+    /** Chiude il turno e riconsegna al motore gli errori fatti (0 = risposta
+        corretta al primo tocco): è il dato con cui Adaptive decide il livello
+        del turno successivo. onSolved(wrongs), se il gioco lo imposta, viene
+        chiamato prima: serve ai giochi che vogliono osservare l'esito. */
     solved() {
       if (ctx._done) return; ctx._done = true; armIdle(null);
       if (ctx.onSolved) ctx.onSolved(wrongs);
-      resolve();
+      resolve(wrongs);
     }
   };
   return ctx;
@@ -919,21 +974,20 @@ async function startGame(game) {
     '</div>';
   $(".promptbar").insertBefore(Mascot.make("mini"), $("#prompt"));   // Bubo "dice" la consegna
 
+  const adapt = Adaptive.begin(game);
   for (let i = 0; i < total; i++) {
     if (S.token !== token) return;
     drawDots(i, total);
     $("#play").innerHTML = "";
-    /* Un semplice Math.max(minLevel, ...) appiattirebbe la partita a un solo
-       livello quando minLevel > 1: qui invece si ridistribuiscono i round
-       sui livelli restanti (minLevel..3), così la difficoltà sale ancora
-       durante la partita anche partendo più avanti. */
-    const minLevel = Profile.minLevel(), span = 4 - minLevel;
-    const level = Math.min(3, minLevel + Math.floor(i / Math.ceil(total / span)));
-    await new Promise(res => {
+    /* Il livello lo decide Adaptive turno per turno, in base alle risposte
+       del turno precedente: si sale rispondendo bene, si scende (in silenzio)
+       quando è servito l'aiuto. Vale per tutti i giochi, senza codice loro. */
+    const wrongs = await new Promise(res => {
       S.resolve = res;
-      game.playRound(makeCtx(game, level, i, total, res));
+      game.playRound(makeCtx(game, adapt.level, i, total, res));
     });
     if (S.token !== token) return;
+    Adaptive.update(game, wrongs || 0);
     addStar();
     await sleep(400);
   }
@@ -1045,28 +1099,14 @@ const svgShape = (s, h, tex) => {
   return '<svg viewBox="0 0 100 100"><defs>' + pattern + '</defs><g fill="url(#' + id + ')">' + shape + '</g></svg>';
 };
 
-/* Livello per il gioco delle forme: non sale un tot per round come nel
-   motore generico, ma in base a come il bambino risponde davvero.
-   2 risposte corrette al primo tocco di fila -> livello successivo.
-   Un errore nel turno -> il livello resta quello (mai una retrocessione,
-   coerente con "nessuno stato di fallimento" del motore).
-   Il progresso resta in memoria fra una partita e la successiva della
-   stessa sessione (come le stelle): con pochi turni a partita, azzerarlo
-   ad ogni "Ancora" renderebbe i livelli 4 e 5 (texture) irraggiungibili.
-   A inizio partita risale comunque almeno alla fascia d'età scelta dai
-   genitori (Profile.minLevel(), che può cambiare a sessione in corso),
-   senza mai abbassare un livello già raggiunto con il gioco. */
-const MATCH_MAX_LEVEL = 5;
-const matchProgress = { level: 1, streak: 0 };
-
+/* Questo gioco è stato il banco di prova dell'adattività: ora quella
+   logica vive nel motore (Adaptive) e vale per tutti i giochi. Qui resta
+   solo maxLevel: 5, perché oltre i 3 livelli standard ci sono i due
+   gradini con le texture (righe, pois). */
 KidBrain.register({
-  id: "match", titleKey: "matchTitle", icon: "🔷", tint: "var(--c2)", rounds: 8,
+  id: "match", titleKey: "matchTitle", icon: "🔷", tint: "var(--c2)", rounds: 8, maxLevel: 5,
   playRound(ctx) {
-    if (ctx.round === 0) {
-      matchProgress.level = Math.min(MATCH_MAX_LEVEL, Math.max(matchProgress.level, Profile.minLevel()));
-      matchProgress.streak = 0;
-    }
-    const level = matchProgress.level;
+    const level = ctx.level;
     const shapes = shuffle(Object.keys(SHAPES));
     const cols = shuffle(COLORS);
     const texs = shuffle(TEXTURES);
@@ -1111,18 +1151,6 @@ KidBrain.register({
     ctx.el.appendChild(model);
     ctx.el.appendChild(row);
     ctx.prompt(T.matchPrompt);
-
-    ctx.onSolved = wrongs => {
-      if (wrongs === 0) {
-        matchProgress.streak++;
-        if (matchProgress.streak >= 2) {
-          matchProgress.level = Math.min(MATCH_MAX_LEVEL, matchProgress.level + 1);
-          matchProgress.streak = 0;
-        }
-      } else {
-        matchProgress.streak = 0;          // errore nel turno: livello mantenuto, serie azzerata
-      }
-    };
   }
 });
 
@@ -1602,9 +1630,12 @@ function openWelcome() {
      icon: "🎨",
      tint: "var(--c5)",
      rounds: 5,                        // opzionale, default 5
+     maxLevel: 3,                      // opzionale, default 3 (vedi Adaptive)
      playRound(ctx) {
        // ctx.el      -> area di gioco già svuotata
-       // ctx.level   -> 1..3, sale automaticamente durante la partita
+       // ctx.level   -> 1..maxLevel, ADATTIVO (stile test GMAT): sale con le
+       //   risposte esatte al primo tocco (2 di fila), scende in silenzio
+       //   quando serve l'aiuto. Il gioco deve solo leggerlo.
        // ctx.round / ctx.total
        // ctx.prompt(testo)         mostra + pronuncia la richiesta
        // ctx.say(testo)            pronuncia soltanto
@@ -1612,9 +1643,9 @@ function openWelcome() {
        //   opts.say   -> frase aggiunta alla lode ("Bravo! Sono tre mele.")
        //   opts.stamp -> simbolo dell'effetto a tutto schermo (default ⭐)
        // ctx.solved()              chiude il turno a mano (es. memory)
-       // ctx.onSolved = wrongs =>  facoltativo: chiamato alla chiusura del turno con
-       //   il numero di errori fatti (0 = risposta giusta al primo tocco). Serve ai
-       //   giochi che gestiscono da soli l'avanzamento di livello (es. "match").
+       // ctx.onSolved = wrongs =>  facoltativo: chiamato alla chiusura del turno
+       //   con gli errori fatti (0 = giusto al primo tocco), se un gioco vuole
+       //   osservare l'esito. L'avanzamento di livello lo fa già il motore.
        // ctx.shuffle / pick / rnd / range / sleep
 
        const bersaglio = ctx.pick(COLORS);
