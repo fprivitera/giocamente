@@ -435,7 +435,10 @@ const STR = {
     emoConfirm: a => "Questa faccia è " + a + ".",
     soundTitle: "Chi fa questo verso?",
     soundPrompt: v => v + " Chi fa questo verso?",
-    soundConfirm: a => "È " + a + "!"
+    soundConfirm: a => "È " + a + "!",
+    symTitle: "La metà che manca",
+    symPrompt: "Completa la figura: tocca la metà che manca!",
+    symDone: "La figura è completa!"
   },
   en: {
     docTitle: "GiocaMente — games for the mind (age 3)",
@@ -510,7 +513,10 @@ const STR = {
     emoConfirm: a => "This face is " + a + ".",
     soundTitle: "Who makes this sound?",
     soundPrompt: v => v + " Who makes this sound?",
-    soundConfirm: a => "It's " + a + "!"
+    soundConfirm: a => "It's " + a + "!",
+    symTitle: "The missing half",
+    symPrompt: "Complete the picture: tap the missing half!",
+    symDone: "The picture is complete!"
   }
 };
 let T = STR[LANG];
@@ -1391,6 +1397,89 @@ KidBrain.register({
     });
     ctx.el.appendChild(row);
     ctx.prompt(T.soundPrompt(target.verse[LANG]));
+  }
+});
+
+/* =========================================================
+   8e. GIOCO 7 — La metà che manca (simmetria)
+   ---------------------------------------------------------
+   Nel modello si vede la metà sinistra di una figura, piena e
+   colorata; la metà destra è solo un contorno tratteggiato da
+   riempire, come la tessera mancante di un puzzle. Sotto, le
+   metà destre fra cui scegliere. È il gioco d'incastro che a
+   tre anni si conosce già dai puzzle di legno, portato sullo
+   schermo: si ragiona sull'asse verticale, quello che i bambini
+   colgono per primo (i volti e i corpi sono simmetrici così).
+   Il contorno tratteggiato resta visibile a tutti i livelli:
+   è la consegna stessa, non un aiuto da togliere — senza,
+   il compito diventerebbe pura memoria della forma.
+   Livelli: prima cambia solo la forma, poi forma e colore
+   insieme, infine 4 scelte con distrattori vicini (stessa
+   forma ma colore diverso, stesso colore ma forma diversa).
+   ========================================================= */
+/* Tutte le SHAPES tranne la luna sono simmetriche rispetto all'asse verticale. */
+const SYM_SHAPES = ["cerchio", "quadrato", "triangolo", "stella", "cuore", "rombo", "esagono"];
+let symSeq = 0;
+
+/** Metà destra di una figura, centrata nella tessera di risposta. */
+function svgHalfRight(s, h) {
+  const id = "symc" + (symSeq++);
+  return '<svg viewBox="0 0 100 100">' +
+    '<defs><clipPath id="' + id + '"><rect x="50" y="-2" width="52" height="104"/></clipPath></defs>' +
+    '<g transform="translate(-25 0)" clip-path="url(#' + id + ')" fill="' + h + '">' + SHAPES[s] + '</g>' +
+  '</svg>';
+}
+
+/** Modello: metà sinistra piena, asse tratteggiato, metà destra solo contorno. */
+function svgHalfModel(s, h) {
+  const id = "symm" + (symSeq++);
+  return '<svg viewBox="0 0 100 100">' +
+    '<defs>' +
+      '<clipPath id="' + id + 'l"><rect x="-2" y="-2" width="52" height="104"/></clipPath>' +
+      '<clipPath id="' + id + 'r"><rect x="50" y="-2" width="52" height="104"/></clipPath>' +
+    '</defs>' +
+    '<g clip-path="url(#' + id + 'r)" fill="none" stroke="rgba(43,33,24,.30)" stroke-width="3" ' +
+      'stroke-dasharray="7 8" stroke-linecap="round">' + SHAPES[s] + '</g>' +
+    '<g clip-path="url(#' + id + 'l)" fill="' + h + '">' + SHAPES[s] + '</g>' +
+    '<line x1="50" y1="4" x2="50" y2="96" stroke="rgba(43,33,24,.22)" stroke-width="2.5" ' +
+      'stroke-dasharray="5 7" stroke-linecap="round"/>' +
+  '</svg>';
+}
+
+KidBrain.register({
+  id: "symmetry", titleKey: "symTitle", icon: "🦋", tint: "var(--c2)", rounds: 5,
+  playRound(ctx) {
+    const shapes = shuffle(SYM_SHAPES);
+    const cols = shuffle(COLORS);
+    let target, options;
+
+    if (ctx.level === 1) {                 // varia solo la FORMA, colore fisso
+      const c = cols[0];
+      target = { s: shapes[0], c };
+      options = shapes.slice(0, 3).map(s => ({ s, c }));
+    } else if (ctx.level === 2) {          // varia FORMA e COLORE insieme: contrasto pieno
+      target = { s: shapes[0], c: cols[0] };
+      options = [target, { s: shapes[1], c: cols[1] }, { s: shapes[2], c: cols[2] }];
+    } else {                               // 4 scelte, distrattori vicini
+      target = { s: shapes[0], c: cols[0] };
+      options = [
+        target,
+        { s: shapes[0], c: cols[1] },
+        { s: shapes[1], c: cols[0] },
+        { s: shapes[1], c: cols[1] }
+      ];
+    }
+
+    const model = mk("div", "model", svgHalfModel(target.s, target.c.h));
+    const row = mk("div", "row");
+    shuffle(options).forEach(o => {
+      const t = mk("div", "tile", svgHalfRight(o.s, o.c.h));
+      ctx.choice(t, o.s === target.s && o.c.n === target.c.n, { stamp: "🦋", say: T.symDone });
+      row.appendChild(t);
+    });
+    ctx.el.appendChild(model);
+    ctx.el.appendChild(row);
+    ctx.prompt(T.symPrompt);
   }
 });
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#fff7ed">
 <title>GiocaMente — giochi per la mente, pensati per i 3 anni</title>
-<meta name="description" content="Quattro mini-giochi cognitivi in italiano per bambini di 3 anni. Progettati sulle evidenze di sviluppo motorio e cognitivo dell'età prescolare. Nessun dato raccolto, nessuna pubblicità, nessun acquisto.">
+<meta name="description" content="Sette mini-giochi cognitivi in italiano per bambini di 3 anni. Progettati sulle evidenze di sviluppo motorio e cognitivo dell'età prescolare. Nessun dato raccolto, nessuna pubblicità, nessun acquisto.">
 <style>
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -231,7 +231,7 @@ footer a{color:var(--soft)}
 <section id="giochi">
   <div class="wrap">
     <span class="eyebrow" data-i18n="eyebrow_train">Cosa allena</span>
-    <h2 data-i18n="h2_games">Sei giochi, sei abilità diverse</h2>
+    <h2 data-i18n="h2_games">Sette giochi, sette abilità diverse</h2>
     <p class="lead" style="margin-bottom:34px" data-i18n="lead_games">
       Ogni gioco ha tre livelli che salgono da soli durante la partita, senza che il bambino
       debba scegliere nulla. Una partita dura fra i due e i quattro minuti.
@@ -273,6 +273,12 @@ footer a{color:var(--soft)}
         <h3 data-i18n="g6_t">Chi fa questo verso?</h3>
         <p data-i18n="g6_p">Bubo pronuncia il verso di un animale, sotto compaiono le figure: si tocca quella giusta. È l'unico gioco che allena l'orecchio invece degli occhi. Si parte da versi molto diversi fra loro (cane, gatto, mucca) e si arriva agli animali da cortile, dal timbro più simile.</p>
         <span class="tagline" data-i18n="g6_tag">Discriminazione uditiva · associazione suono-simbolo</span>
+      </div>
+      <div class="card" style="--tint:var(--c2)">
+        <div class="ico">🦋</div>
+        <h3 data-i18n="g7_t">La metà che manca</h3>
+        <p data-i18n="g7_p">Metà figura c'è, l'altra metà è solo un contorno tratteggiato: si tocca la metà che la completa allo specchio, come la tessera di un puzzle. Prima cambia solo la forma, poi anche il colore.</p>
+        <span class="tagline" data-i18n="g7_tag">Simmetria assiale · completamento visivo</span>
       </div>
     </div>
 
@@ -461,7 +467,7 @@ footer a{color:var(--soft)}
     microcopy_hero: "Works offline · No installation · No account · Free",
     mockbar: "Tap the one that matches this!",
     eyebrow_train: "What it trains",
-    h2_games: "Six games, six different skills",
+    h2_games: "Seven games, seven different skills",
     lead_games: "Each game has three levels that step up on their own during play, without the child having to choose anything. A session lasts two to four minutes.",
     g1_t: "Find the match",
     g1_p: "A model at the top, three options below. First only the shape changes, then only the colour, finally both together.",
@@ -481,6 +487,9 @@ footer a{color:var(--soft)}
     g6_t: "Who makes this sound?",
     g6_p: "Bubo says an animal's sound out loud, and pictures appear below: tap the right one. It's the only game that trains the ear instead of the eyes. It starts with very different sounds (dog, cat, cow) and moves on to farmyard animals, whose sounds are more alike.",
     g6_tag: "Auditory discrimination · sound-to-symbol matching",
+    g7_t: "The missing half",
+    g7_p: "Half of the picture is there, the other half is just a dashed outline: tap the half that completes it like a mirror, like a puzzle piece. First only the shape changes, then the colour too.",
+    g7_tag: "Axial symmetry · visual completion",
     bubo_t: "Bubo, the owl who gives the prompts",
     bubo_p: "Bubo greets the child on the first screen, sits next to every request and celebrates at the end. Tapping Bubo repeats the prompt out loud: it's the same command as the 🔊 button, but in the form a three-year-old reaches for first — a big, colourful character, always in the same place. Bubo hops when the answer is right and tilts the head when it isn't: never a sad face.",
     eyebrow_why: "Why it's made this way",
@@ -544,7 +553,7 @@ footer a{color:var(--soft)}
     document.documentElement.lang = lang;
     if (lang === "en") {
       document.title = "GiocaMente — brain games designed for age 3";
-      if (md) md.setAttribute("content", "Four cognitive mini-games for 3-year-olds. Designed on the evidence about preschool motor and cognitive development. No data collected, no ads, no purchases.");
+      if (md) md.setAttribute("content", "Seven cognitive mini-games for 3-year-olds. Designed on the evidence about preschool motor and cognitive development. No data collected, no ads, no purchases.");
       nodes.forEach(function (el) {
         var t = EN[el.getAttribute("data-i18n")];
         if (t != null) el.innerHTML = t;
