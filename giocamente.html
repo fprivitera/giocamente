@@ -432,7 +432,10 @@ const STR = {
     count10ChoosePrompt: (n, numw10) => "Hai contato fino a " + numw10[n - 11] + "! Ora tocca il numero scritto.",
     emoTitle: "Come si sente?",
     emoPrompt: a => "Tocca la faccia " + a + "!",
-    emoConfirm: a => "Questa faccia è " + a + "."
+    emoConfirm: a => "Questa faccia è " + a + ".",
+    soundTitle: "Chi fa questo verso?",
+    soundPrompt: v => v + " Chi fa questo verso?",
+    soundConfirm: a => "È " + a + "!"
   },
   en: {
     docTitle: "GiocaMente — games for the mind (age 3)",
@@ -504,7 +507,10 @@ const STR = {
     count10ChoosePrompt: (n, numw10) => "You counted all the way to " + numw10[n - 11] + "! Now tap the written number.",
     emoTitle: "How does it feel?",
     emoPrompt: a => "Tap the " + a + " face!",
-    emoConfirm: a => "This face is " + a + "."
+    emoConfirm: a => "This face is " + a + ".",
+    soundTitle: "Who makes this sound?",
+    soundPrompt: v => v + " Who makes this sound?",
+    soundConfirm: a => "It's " + a + "!"
   }
 };
 let T = STR[LANG];
@@ -1340,6 +1346,51 @@ KidBrain.register({
         }
       });
     });
+  }
+});
+
+/* =========================================================
+   8d. GIOCO 6 — Chi fa questo verso?
+   ---------------------------------------------------------
+   Discriminazione uditiva: Bubo pronuncia il verso ("Bau bau!"),
+   il bambino tocca l'animale che lo fa. È l'unico gioco della
+   batteria che allena l'orecchio invece degli occhi — gli altri
+   cinque sono tutti compiti visivi. Zero file audio: il verso è
+   la stessa sintesi vocale che legge le altre consegne, non un
+   suono campionato.
+   Livello 1 confronta animali dal verso molto diverso (cane,
+   gatto, mucca); ai livelli 2-3 si aggiungono animali da
+   cortile dal timbro più simile fra loro, per una discriminazione
+   più fine. Ogni risposta giusta rinomina l'animale ad alta voce.
+   ========================================================= */
+const VERSI = [
+  { e: "🐶", lv: 1, it: "il cane", en: "the dog", verse: { it: "Bau bau!", en: "Woof woof!" } },
+  { e: "🐱", lv: 1, it: "il gatto", en: "the cat", verse: { it: "Miao!", en: "Meow!" } },
+  { e: "🐮", lv: 1, it: "la mucca", en: "the cow", verse: { it: "Muuu!", en: "Moo!" } },
+  { e: "🐑", lv: 2, it: "la pecora", en: "the sheep", verse: { it: "Bee!", en: "Baa!" } },
+  { e: "🦆", lv: 2, it: "l'anatra", en: "the duck", verse: { it: "Qua qua!", en: "Quack quack!" } },
+  { e: "🐔", lv: 2, it: "la gallina", en: "the hen", verse: { it: "Coccodè!", en: "Cluck cluck!" } },
+  { e: "🐴", lv: 3, it: "il cavallo", en: "the horse", verse: { it: "Hiiii!", en: "Neigh!" } },
+  { e: "🐸", lv: 3, it: "la rana", en: "the frog", verse: { it: "Cra cra!", en: "Ribbit!" } },
+  { e: "🦁", lv: 3, it: "il leone", en: "the lion", verse: { it: "Grrr!", en: "Roar!" } }
+];
+
+KidBrain.register({
+  id: "sound", titleKey: "soundTitle", icon: "👂", tint: "var(--c6)", rounds: 5,
+  playRound(ctx) {
+    const n = ctx.level === 1 ? 2 : 3;
+    const opts = shuffle(VERSI.filter(x => x.lv <= ctx.level)).slice(0, n);
+    const target = pick(opts);
+
+    const row = mk("div", "row");
+    opts.forEach(o => {
+      const t = mk("div", "tile");
+      t.appendChild(mk("span", "face", o.e));
+      ctx.choice(t, o === target, { stamp: target.e, say: T.soundConfirm(target[LANG]) });
+      row.appendChild(t);
+    });
+    ctx.el.appendChild(row);
+    ctx.prompt(T.soundPrompt(target.verse[LANG]));
   }
 });
 
