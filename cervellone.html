@@ -1,0 +1,1086 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fff7ed">
+<title>Cervellone — Chi ha il cervello più grande?</title>
+<meta name="description" content="Dodici mini-giochi in quattro categorie — Logica, Calcolo, Visivo, Memoria — per misurare quanto pesa il tuo cervello. Omaggio ai brain trainer sociali del 2007. Nessun dato raccolto.">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+body{
+  margin:0;font-family:Nunito,"Trebuchet MS",Avenir,system-ui,sans-serif;color:#2b2118;line-height:1.5;
+  background:#fff7ed;-webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+:root{
+  --c1:#ffb703;--c2:#3aa8ff;--c3:#34d399;--c4:#f76c8c;--c5:#a78bfa;--c6:#fb8500;
+  --ink:#2b2118;--soft:#6b5f52;--line:rgba(43,33,24,.12);
+  --shadow:0 8px 0 rgba(0,0,0,.06),0 14px 26px rgba(0,0,0,.09);
+}
+.wrap{width:min(880px,94vw);margin-inline:auto}
+button{font-family:inherit;color:inherit}
+
+/* ---------- barra alta ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px}
+.brand .dot{
+  width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:20px;
+  background:linear-gradient(140deg,var(--c1),var(--c6));box-shadow:var(--shadow)
+}
+.iconbtn{
+  border:1px solid var(--line);background:#fff;border-radius:999px;font-size:16px;font-weight:900;
+  padding:9px 14px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.05);text-decoration:none;color:var(--ink)
+}
+.iconbtn:active{transform:translateY(2px)}
+
+/* ---------- home ---------- */
+.hero{text-align:center;padding:18px 0 8px}
+.hero .big{font-size:76px;line-height:1;filter:drop-shadow(0 8px 10px rgba(0,0,0,.15))}
+h1{font-size:clamp(30px,6vw,46px);font-weight:900;line-height:1.1;margin:.3em 0 .2em;letter-spacing:-.01em}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--c4),var(--c6),var(--c1));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--soft);font-size:clamp(15px,2.2vw,18px);max-width:56ch;margin:0 auto}
+.cta{
+  display:inline-flex;align-items:center;gap:10px;border:0;cursor:pointer;text-decoration:none;
+  background:var(--c3);color:#fff;font-weight:900;font-size:clamp(18px,2.4vw,22px);
+  padding:16px 30px;border-radius:18px;box-shadow:var(--shadow);transition:transform .12s ease;margin-top:20px
+}
+.cta:active{transform:translateY(3px)}
+.bestchip{
+  display:inline-block;margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:999px;
+  padding:8px 18px;font-weight:800;font-size:14px;color:var(--soft)
+}
+.rules{color:var(--soft);font-size:14px;margin-top:16px}
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;padding:26px 0 10px}
+.catcard{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px}
+.cathead{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;margin-bottom:10px}
+.cathead .badge{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:18px;color:#fff}
+.gamebtn{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff7ed;border:1px solid var(--line);
+  border-radius:14px;padding:10px 12px;margin-top:8px;cursor:pointer;font-weight:800;font-size:15px;
+  transition:transform .1s ease
+}
+.gamebtn:active{transform:translateY(2px)}
+.gamebtn .gi{font-size:22px}
+.gamebtn .gd{display:block;font-weight:600;font-size:12.5px;color:var(--soft)}
+.gamebtn .rec{margin-left:auto;font-size:12px;font-weight:800;color:var(--c6);white-space:nowrap}
+.homefoot{color:var(--soft);font-size:13px;text-align:center;padding:22px 0 46px}
+.homefoot a{color:var(--c6)}
+
+/* ---------- intro gioco ---------- */
+.introcard{
+  background:#fff;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);
+  max-width:520px;margin:26px auto;padding:30px;text-align:center
+}
+.introcard .step{font-size:13px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.introcard .catchip{
+  display:inline-block;color:#fff;font-weight:900;font-size:14px;border-radius:999px;padding:6px 16px;margin:10px 0
+}
+.introcard .gicon{font-size:64px;margin:6px 0}
+.introcard h2{font-size:28px;font-weight:900;margin:0 0 8px}
+.introcard p{color:var(--soft);margin:0 0 18px}
+
+/* ---------- schermata di gioco ---------- */
+.hud{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:6px}
+.hud .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:900;font-size:14px}
+.hud .chip.cat{color:#fff;border:0}
+.hud .grow{flex:1}
+.hud .mult{background:var(--c1);border:0;color:#2b2118;animation:pop .3s ease}
+@keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}
+.timerwrap{display:flex;align-items:center;gap:10px;margin:12px 0}
+.timerbar{flex:1;height:14px;background:rgba(0,0,0,.08);border-radius:999px;overflow:hidden}
+.timerbar i{display:block;height:100%;background:var(--c3);border-radius:999px;transition:width .1s linear}
+.timerbar i.warn{background:var(--c4)}
+.timertxt{font-weight:900;font-size:16px;min-width:34px;text-align:right}
+#prompt{text-align:center;font-weight:900;font-size:clamp(18px,3vw,24px);min-height:1.4em;margin:4px 0 10px}
+#arenaWrap{position:relative}
+#arena{
+  background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);
+  min-height:min(58vh,460px);padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  position:relative;overflow:hidden
+}
+.float{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);font-weight:900;font-size:24px;color:var(--c3);
+  pointer-events:none;animation:rise .8s ease forwards;z-index:5
+}
+.float.bad{color:var(--c4)}
+@keyframes rise{from{opacity:1;translate:0 0}to{opacity:0;translate:0 -34px}}
+
+/* elementi comuni dei giochi */
+.optrow{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.opt{
+  background:#fff7ed;border:1px solid var(--line);border-radius:16px;cursor:pointer;font-weight:900;
+  font-size:22px;padding:12px 18px;box-shadow:0 5px 0 rgba(0,0,0,.05);transition:transform .1s ease;min-width:64px
+}
+.opt:active{transform:translateY(2px)}
+.opt.big{font-size:34px;min-width:76px}
+.bigq{font-size:clamp(30px,6vw,46px);font-weight:900;letter-spacing:.02em}
+.bigq .hole{display:inline-grid;place-items:center;width:1.4em;height:1.4em;border:3px dashed rgba(43,33,24,.3);border-radius:12px;vertical-align:middle}
+.shake{animation:shake .35s ease}
+@keyframes shake{20%{translate:-6px 0}40%{translate:6px 0}60%{translate:-4px 0}80%{translate:4px 0}}
+
+/* bilance */
+.scales{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.scale{width:min(150px,28vw);height:auto}
+
+/* sequenze */
+.seqrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.seqcell{
+  min-width:52px;height:52px;padding:4px 8px;background:#fff7ed;border:1px solid var(--line);border-radius:12px;
+  display:grid;place-items:center;font-size:24px;font-weight:900;letter-spacing:-2px
+}
+.seqcell.q{border:3px dashed rgba(43,33,24,.3);background:#fffdf5;font-size:26px}
+
+/* intruso */
+.odd{display:grid;gap:8px;justify-content:center}
+.odd button{font-size:clamp(22px,4.5vw,30px);padding:6px;background:#fff7ed;border:1px solid var(--line);border-radius:12px;cursor:pointer;line-height:1.2}
+
+/* confronto */
+.duel{display:flex;gap:14px;justify-content:center;width:100%}
+.duel .opt{flex:1;max-width:240px;font-size:clamp(24px,4.5vw,34px);padding:26px 10px}
+
+/* coppie */
+.cardsgrid{display:grid;gap:10px;justify-content:center}
+.mcard{
+  width:clamp(52px,12vw,68px);aspect-ratio:1;border-radius:12px;border:1px solid var(--line);cursor:pointer;
+  background:linear-gradient(140deg,var(--c5),var(--c2));box-shadow:0 4px 0 rgba(0,0,0,.08);
+  display:grid;place-items:center;font-size:clamp(24px,6vw,32px);font-weight:900;color:#fff;
+  transition:transform .15s ease
+}
+.mcard .face{display:none}
+.mcard.open,.mcard.done{background:#fff}
+.mcard.open .face,.mcard.done .face{display:block}
+.mcard.open .backq,.mcard.done .backq{display:none}
+.mcard.done{opacity:.45;cursor:default}
+
+/* simon */
+.simon{display:grid;grid-template-columns:repeat(2,minmax(90px,130px));gap:14px}
+.pad{aspect-ratio:1;border:0;border-radius:22px;cursor:pointer;opacity:.55;box-shadow:0 6px 0 rgba(0,0,0,.12);transition:opacity .12s ease,transform .1s ease}
+.pad.on{opacity:1;transform:scale(1.05)}
+.pad:active{transform:translateY(2px)}
+.simonstatus{font-weight:900;color:var(--soft)}
+
+/* memorizza */
+.memgrid{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;font-size:clamp(30px,7vw,44px)}
+
+/* asteroidi */
+.space{
+  position:relative;width:100%;height:min(46vh,360px);border-radius:18px;
+  background:radial-gradient(circle at 70% 20%,#3d3f63 0%,#23243c 60%,#191a2e 100%);overflow:hidden
+}
+.rock{
+  position:absolute;width:clamp(50px,11vw,64px);aspect-ratio:1;border-radius:50%;border:0;cursor:pointer;
+  background:radial-gradient(circle at 32% 30%,#a89d92,#6b6259 55%,#4a433c);color:#fff;font-weight:900;
+  font-size:clamp(17px,3vw,21px);display:grid;place-items:center;box-shadow:0 0 14px rgba(255,255,255,.15);
+  animation:bob 3s ease-in-out infinite alternate
+}
+@keyframes bob{from{margin-top:-5px}to{margin-top:5px}}
+.rock.gone{visibility:hidden}
+.star{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;opacity:.7}
+
+/* blocchi */
+.blocks{max-width:min(300px,60vw)}
+
+/* tessera */
+.mosaic{display:grid;grid-template-columns:repeat(3,clamp(56px,13vw,74px));gap:8px}
+.mtile{
+  aspect-ratio:1;border-radius:12px;border:1px solid var(--line);display:grid;place-items:center;
+  font-size:clamp(24px,5vw,32px);color:rgba(43,33,24,.75)
+}
+.mtile.hole{border:3px dashed rgba(43,33,24,.35);background:#fffdf5;color:var(--soft);font-weight:900}
+button.mtile{cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.07)}
+button.mtile:active{transform:translateY(2px)}
+
+/* ---------- overlay ---------- */
+#overlay{
+  position:fixed;inset:0;background:rgba(255,247,237,.88);display:grid;place-items:center;z-index:50;
+  font-size:clamp(60px,14vw,110px);font-weight:900
+}
+#overlay span{animation:pop .35s ease}
+
+/* ---------- risultati ---------- */
+.endcard{
+  background:#fff;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);
+  max-width:560px;margin:22px auto 50px;padding:30px;text-align:center
+}
+.endcard .brain{line-height:1;transition:font-size .2s ease;filter:drop-shadow(0 10px 12px rgba(0,0,0,.18))}
+.weight{font-size:clamp(40px,8vw,58px);font-weight:900;margin:6px 0 0}
+.weight small{font-size:.5em;color:var(--soft)}
+.rank{
+  display:inline-block;margin:8px 0 4px;background:linear-gradient(90deg,#fff2d9,#ffe4f0);border:1px solid var(--line);
+  border-radius:999px;padding:9px 22px;font-weight:900;font-size:clamp(17px,3vw,21px)
+}
+.newrec{color:var(--c6);font-weight:900;margin:6px 0 0}
+.breakdown{margin:20px 0 6px;text-align:left}
+.brow{display:flex;align-items:center;gap:10px;margin:10px 0;font-weight:800;font-size:14px}
+.brow .bname{width:40%;min-width:130px}
+.brow .bbar{flex:1;height:12px;background:rgba(0,0,0,.07);border-radius:999px;overflow:hidden}
+.brow .bbar i{display:block;height:100%;border-radius:999px}
+.brow .bval{min-width:52px;text-align:right}
+.endbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.cta.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a class="iconbtn" href="index.html" aria-label="Torna a GiocaMente">← GiocaMente</a>
+    <div class="brand"><span class="dot">🧠</span> Cervellone</div>
+    <button class="iconbtn" id="btnMute" aria-label="Attiva o disattiva i suoni">🔊</button>
+  </div>
+
+  <!-- ===================== HOME ===================== -->
+  <section id="scrHome">
+    <div class="hero">
+      <div class="big">🧠</div>
+      <h1>Chi ha il cervello <em>più grande</em>?</h1>
+      <p class="sub">Quattro sfide da 60 secondi — una per ciascuna area: <b>Logica</b>, <b>Calcolo</b>,
+        <b>Visivo</b> e <b>Memoria</b>. Alla fine scopri quanto pesa il tuo cervello, in grammi.</p>
+      <div><button class="cta" id="btnRound">🎮 Partita completa</button></div>
+      <div class="bestchip" id="bestChip" hidden></div>
+      <p class="rules">Risposte giuste di fila fanno salire il moltiplicatore fino a ×4.
+        Un errore lo azzera e costa 50 punti. Tocca un singolo gioco qui sotto per allenarti.</p>
+    </div>
+    <div class="cats" id="catGrid"></div>
+    <p class="homefoot">
+      Omaggio a <i>Who Has The Biggest Brain?</i> (Playfish, 2007), il brain trainer che spopolò su Facebook.
+      Gioco indipendente, tutto nel browser: nessun dato raccolto. Fa parte di <a href="index.html">GiocaMente</a>.
+    </p>
+  </section>
+
+  <!-- ===================== INTRO GIOCO ===================== -->
+  <section id="scrIntro" hidden>
+    <div class="introcard">
+      <div class="step" id="inStep"></div>
+      <div><span class="catchip" id="inCat"></span></div>
+      <div class="gicon" id="inIcon"></div>
+      <h2 id="inName"></h2>
+      <p id="inDesc"></p>
+      <button class="cta" id="btnGo">Pronto? Via!</button>
+      <div style="margin-top:14px"><button class="iconbtn" id="btnIntroQuit">Annulla</button></div>
+    </div>
+  </section>
+
+  <!-- ===================== GIOCO ===================== -->
+  <section id="scrGame" hidden>
+    <div class="hud">
+      <span class="chip cat" id="hudCat"></span>
+      <span class="chip" id="hudGame"></span>
+      <span class="grow"></span>
+      <span class="chip mult" id="hudMult" hidden></span>
+      <span class="chip" id="hudScore">0</span>
+      <button class="iconbtn" id="btnQuit" aria-label="Abbandona la partita">✕</button>
+    </div>
+    <div class="timerwrap">
+      <div class="timerbar"><i id="timerFill"></i></div>
+      <div class="timertxt" id="timerTxt">60</div>
+    </div>
+    <div id="prompt"></div>
+    <div id="arenaWrap"><div id="arena"></div></div>
+  </section>
+
+  <!-- ===================== RISULTATI ===================== -->
+  <section id="scrEnd" hidden>
+    <div class="endcard" id="endCard"></div>
+  </section>
+
+</div>
+
+<div id="overlay" hidden><span id="ovTxt"></span></div>
+
+<script>
+/* =========================================================================
+   Cervellone — replica delle meccaniche di Who Has The Biggest Brain?
+   (Playfish, 2007): 4 categorie × 3 mini-giochi, partite da 60 secondi,
+   moltiplicatore per risposte consecutive, peso del cervello in grammi
+   e 27 titoli. Grafica e nomi originali.
+   ========================================================================= */
+"use strict";
+
+/* ---------- utilità ---------- */
+const $ = s => document.querySelector(s);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sample = (a, n) => shuffle(a.slice()).slice(0, n);
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const esc = s => String(s);
+
+/* ---------- persistenza (solo record, sul dispositivo) ---------- */
+const Store = {
+  key: "cervellone.v1",
+  mem: { best: 0, games: {} },
+  load() { try { const d = JSON.parse(localStorage.getItem(this.key)); if (d) this.mem = Object.assign(this.mem, d); } catch (e) {} },
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.mem)); } catch (e) {} }
+};
+Store.load();
+
+/* ---------- suoni minimi (WebAudio, niente file) ---------- */
+const Sfx = {
+  ctx: null, on: true,
+  ac() { if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return this.ctx; },
+  tone(f, t, dur, type, g) {
+    const c = this.ac(); if (!c || !this.on) return;
+    const o = c.createOscillator(), v = c.createGain();
+    o.type = type || "sine"; o.frequency.value = f;
+    v.gain.setValueAtTime(g || .1, c.currentTime + t);
+    v.gain.exponentialRampToValueAtTime(.001, c.currentTime + t + dur);
+    o.connect(v); v.connect(c.destination);
+    o.start(c.currentTime + t); o.stop(c.currentTime + t + dur);
+  },
+  good() { this.tone(660, 0, .09); this.tone(880, .08, .12); },
+  bad() { this.tone(170, 0, .2, "square", .07); },
+  pad(i) { this.tone([330, 392, 494, 587][i], 0, .28, "triangle", .14); },
+  tick() { this.tone(520, 0, .06, "square", .05); },
+  win() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * .13, .22)); }
+};
+
+/* ---------- categorie e titoli ---------- */
+const CATS = {
+  logica:  { nome: "Logica",  icona: "⚖️", colore: "var(--c5)" },
+  calcolo: { nome: "Calcolo", icona: "➗", colore: "var(--c2)" },
+  visivo:  { nome: "Visivo",  icona: "👁️", colore: "var(--c3)" },
+  memoria: { nome: "Memoria", icona: "🧩", colore: "var(--c4)" }
+};
+const CAT_ORDER = ["logica", "calcolo", "visivo", "memoria"];
+
+/* 27 titoli, dal più piccolo al più grande (come i 27 rating dell'originale) */
+const RANKS = [
+  "Cervello di Ameba", "Cervello di Lumaca", "Cervello di Medusa", "Cervello di Pesce Rosso",
+  "Cervello di Rana", "Cervello di Piccione", "Cervello di Criceto", "Cervello di Coniglio",
+  "Cervello di Gatto", "Cervello di Volpe", "Cervello di Corvo", "Cervello di Polpo",
+  "Cervello di Maialino", "Cervello di Delfino", "Cervello di Scimpanzé", "Cervello di Elefante",
+  "Studente Sveglio", "Secchione di Classe", "Topo di Biblioteca", "Professore",
+  "Ricercatore", "Luminare", "Genio", "Supercervello",
+  "Cervello Quantistico", "Cervello Galattico", "Cervello Cosmico"
+];
+
+/* ---------- pool di emoji ---------- */
+const OBJ = ["🎁", "🧸", "📦", "🎒", "🪣", "⚽", "🎂", "🍉", "🥥", "📚", "🪨", "🛢️"];
+const SEQ_EMO = ["🍎", "🍌", "🍇", "⭐", "🌙", "☀️", "🌸", "🐟", "🎈", "🔷", "🔶", "💚"];
+const INTRUSI = [
+  ["🐶", "🐺"], ["🍋", "🍐"], ["😀", "😄"], ["🐢", "🐊"], ["🌼", "🌻"], ["🍩", "🥯"],
+  ["🦆", "🦢"], ["⭐", "🌟"], ["🧄", "🧅"], ["🐸", "🦖"], ["🐴", "🦓"], ["🍨", "🍦"]
+];
+const COPPIE_EMO = ["🍓", "🍊", "🥝", "🍒", "🐙", "🦀", "🐳", "🦉", "🌵", "🍄", "🚗", "✈️", "🎸", "🎲", "🧩", "⚽", "🌈", "🍕", "🧁", "🔑"];
+const MEM_EMO = ["🍎", "🚲", "🎺", "🐘", "🌂", "🔔", "🥕", "🚀", "🐝", "🎩", "🍪", "⚓", "🦋", "🥁", "🌻", "📷", "🧦", "🍇", "🪁", "🐠", "🍦", "🗝️", "🎈", "🐢"];
+
+/* ---------- opzioni numeriche uniche attorno a un valore ---------- */
+function numOpts(v, spread) {
+  const s = new Set([v]);
+  let guard = 0;
+  while (s.size < 4 && guard++ < 200) {
+    const d = ri(1, spread || 3) * (Math.random() < .5 ? -1 : 1);
+    const c = v + d;
+    if (c >= 0) s.add(c);
+  }
+  while (s.size < 4) s.add(v + s.size);
+  return shuffle([...s]);
+}
+function emoOpts(answer, pool) {
+  const s = new Set([answer]);
+  const rest = shuffle(pool.filter(e => e !== answer));
+  for (const e of rest) { if (s.size >= 4) break; s.add(e); }
+  return shuffle([...s]);
+}
+
+/* =========================================================================
+   MOTORE — timer da 60 s, punteggio, moltiplicatore, coda dei giochi
+   ========================================================================= */
+const GAME_SECONDS = 60;
+
+function showScreen(id) {
+  ["scrHome", "scrIntro", "scrGame", "scrEnd"].forEach(s => { $("#" + s).hidden = (s !== id); });
+  window.scrollTo(0, 0);
+}
+function overlay(txt) { $("#ovTxt").textContent = txt; $("#overlay").hidden = false; }
+function overlayOff() { $("#overlay").hidden = true; }
+
+const Engine = {
+  playing: false, score: 0, streak: 0, mult: 1, left: 0,
+  tick: null, touts: [], mode: "round", queue: [], qi: 0, results: [],
+
+  startRound() {
+    this.mode = "round";
+    this.queue = CAT_ORDER.map(c => pick(GAMES.filter(g => g.cat === c)));
+    this.qi = 0; this.results = [];
+    this.showIntro();
+  },
+  startPractice(id) {
+    this.mode = "practice";
+    this.queue = [GAMES.find(g => g.id === id)];
+    this.qi = 0; this.results = [];
+    this.showIntro();
+  },
+  cur() { return this.queue[this.qi]; },
+
+  showIntro() {
+    const g = this.cur(), c = CATS[g.cat];
+    $("#inStep").textContent = this.mode === "round" ? `Gioco ${this.qi + 1} di ${this.queue.length}` : "Allenamento";
+    $("#inCat").textContent = c.icona + " " + c.nome;
+    $("#inCat").style.background = c.colore;
+    $("#inIcon").textContent = g.icona;
+    $("#inName").textContent = g.nome;
+    $("#inDesc").textContent = g.desc;
+    showScreen("scrIntro");
+  },
+
+  launch() {
+    const g = this.cur(), c = CATS[g.cat];
+    $("#hudCat").textContent = c.icona + " " + c.nome;
+    $("#hudCat").style.background = c.colore;
+    $("#hudGame").textContent = g.nome;
+    showScreen("scrGame");
+    $("#arena").innerHTML = ""; $("#prompt").innerHTML = "";
+    this.updateHud(); this.updateTimer(GAME_SECONDS);
+    let n = 3;
+    overlay(n);
+    const step = () => {
+      n--;
+      if (n > 0) { Sfx.tick(); overlay(n); this.after(step, 650); }
+      else { overlay("Via!"); Sfx.good(); this.after(() => { overlayOff(); this.play(); }, 550); }
+    };
+    Sfx.tick();
+    this.after(step, 650);
+  },
+
+  play() {
+    this.playing = true;
+    this.score = 0; this.streak = 0; this.mult = 1; this.left = GAME_SECONDS;
+    this.updateHud();
+    $("#arena").innerHTML = "";
+    this.cur().start(api);
+    this.tick = setInterval(() => {
+      this.left = Math.max(0, this.left - .1);
+      this.updateTimer(this.left);
+      if (this.left <= 0) this.finishGame();
+    }, 100);
+  },
+
+  updateTimer(v) {
+    const f = $("#timerFill");
+    f.style.width = (v / GAME_SECONDS * 100) + "%";
+    f.classList.toggle("warn", v < 10);
+    $("#timerTxt").textContent = Math.ceil(v);
+  },
+  updateHud() {
+    $("#hudScore").textContent = this.score;
+    const m = $("#hudMult");
+    m.hidden = this.mult <= 1;
+    m.textContent = "×" + this.mult;
+  },
+
+  correct(base) {
+    if (!this.playing) return;
+    this.streak++;
+    const prev = this.mult;
+    this.mult = Math.min(4, 1 + Math.floor(this.streak / 3));
+    if (this.mult !== prev) { $("#hudMult").hidden = true; } /* riattiva l'animazione pop */
+    const pts = Math.round((base || 100) * this.mult);
+    this.score += pts;
+    this.floater("+" + pts, false);
+    Sfx.good();
+    this.updateHud();
+  },
+  wrong(penalize) {
+    if (!this.playing) return;
+    this.streak = 0; this.mult = 1;
+    if (penalize !== false) {
+      this.score = Math.max(0, this.score - 50);
+      this.floater("−50", true);
+    }
+    Sfx.bad();
+    this.updateHud();
+  },
+  floater(txt, bad) {
+    const s = document.createElement("span");
+    s.className = "float" + (bad ? " bad" : "");
+    s.style.marginLeft = ri(-60, 60) + "px";
+    s.textContent = txt;
+    $("#arena").appendChild(s);
+    setTimeout(() => s.remove(), 850);
+  },
+
+  after(fn, ms) { const t = setTimeout(fn, ms); this.touts.push(t); return t; },
+  clearTimers() {
+    if (this.tick) { clearInterval(this.tick); this.tick = null; }
+    this.touts.forEach(clearTimeout); this.touts = [];
+  },
+
+  finishGame() {
+    if (!this.playing) return;
+    this.playing = false;
+    this.clearTimers();
+    const g = this.cur();
+    this.results.push({ g, score: this.score });
+    if (this.score > (Store.mem.games[g.id] || 0)) { Store.mem.games[g.id] = this.score; Store.save(); }
+    overlay("⏱️ Tempo!");
+    setTimeout(() => {
+      overlayOff();
+      this.qi++;
+      if (this.qi < this.queue.length) this.showIntro();
+      else this.finishAll();
+    }, 1300);
+  },
+
+  quit() {
+    this.playing = false;
+    this.clearTimers();
+    overlayOff();
+    renderHome();
+    showScreen("scrHome");
+  },
+
+  finishAll() {
+    if (this.mode === "practice") { renderPracticeEnd(this.results[0]); }
+    else { renderRoundEnd(this.results); }
+    showScreen("scrEnd");
+  }
+};
+
+/* API passata ai mini-giochi */
+const api = {
+  get arena() { return $("#arena"); },
+  setPrompt(h) { $("#prompt").innerHTML = h; },
+  correct: b => Engine.correct(b),
+  wrong: p => Engine.wrong(p),
+  after: (fn, ms) => Engine.after(fn, ms),
+  playing: () => Engine.playing
+};
+
+/* =========================================================================
+   MINI-GIOCHI — LOGICA
+   ========================================================================= */
+
+/* Le Bilance: una catena di pesate definisce l'ordine; trova il più pesante
+   (o il più leggero). Come lo "Scales" dell'originale. */
+function scaleSVG(l, r, leftHeavy) {
+  const a = leftHeavy ? -7 : 7;
+  return `<svg class="scale" viewBox="0 0 150 112" aria-hidden="true">
+    <rect x="52" y="98" width="46" height="8" rx="4" fill="#b08968"/>
+    <polygon points="69,98 81,98 77,66 73,66" fill="#b08968"/>
+    <g transform="rotate(${a} 75 64)">
+      <rect x="15" y="60" width="120" height="7" rx="3.5" fill="#8d6e52"/>
+      <line x1="25" y1="66" x2="25" y2="82" stroke="#8d6e52" stroke-width="2.5"/>
+      <line x1="125" y1="66" x2="125" y2="82" stroke="#8d6e52" stroke-width="2.5"/>
+      <ellipse cx="25" cy="88" rx="17" ry="6" fill="#d4a373"/>
+      <ellipse cx="125" cy="88" rx="17" ry="6" fill="#d4a373"/>
+      <text x="25" y="84" font-size="20" text-anchor="middle">${l}</text>
+      <text x="125" y="84" font-size="20" text-anchor="middle">${r}</text>
+    </g>
+    <circle cx="75" cy="64" r="4" fill="#6b4f3a"/>
+  </svg>`;
+}
+function gBilance(a) {
+  let n = 3, hits = 0;
+  function round() {
+    const objs = sample(OBJ, n);
+    const ord = shuffle(objs.slice());           /* ord[0] = più pesante */
+    const comps = [];
+    for (let i = 0; i < n - 1; i++) comps.push([ord[i], ord[i + 1]]);
+    shuffle(comps);
+    const chiediPesante = Math.random() < .5;
+    const target = chiediPesante ? ord[0] : ord[n - 1];
+    a.setPrompt(chiediPesante ? "Qual è il più <b>pesante</b>?" : "Qual è il più <b>leggero</b>?");
+    const svg = comps.map(([h, l]) => {
+      const flip = Math.random() < .5;
+      return scaleSVG(flip ? l : h, flip ? h : l, !flip);
+    }).join("");
+    a.arena.innerHTML = `<div class="scales">${svg}</div>
+      <div class="optrow">${shuffle(objs.slice()).map(o => `<button class="opt big" data-v="${o}">${o}</button>`).join("")}</div>`;
+    a.arena.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      if (b.dataset.v === target) {
+        a.correct(110 + 40 * (n - 3));
+        hits++; if (hits % 3 === 0 && n < 5) n++;
+        round();
+      } else { a.wrong(); b.classList.add("shake"); }
+    });
+  }
+  round();
+}
+
+/* Che Cosa Viene Dopo: completa la sequenza (ripetizioni, rotazioni, conte). */
+function gSequenze(a) {
+  a.setPrompt("Che cosa viene dopo?");
+  function round() {
+    const type = pick(["rep", "rot", "cnt"]);
+    let seq = [], answer, opts;
+    if (type === "rep") {
+      const p = sample(SEQ_EMO, ri(2, 3));
+      for (let i = 0; i < 6; i++) seq.push(p[i % p.length]);
+      answer = p[6 % p.length];
+      opts = emoOpts(answer, SEQ_EMO);
+    } else if (type === "rot") {
+      const arr = ["⬆️", "➡️", "⬇️", "⬅️"];
+      const s = ri(0, 3), dir = pick([1, 3]);
+      for (let i = 0; i < 5; i++) seq.push(arr[(s + i * dir) % 4]);
+      answer = arr[(s + 5 * dir) % 4];
+      opts = shuffle(arr.slice());
+    } else {
+      const e = pick(SEQ_EMO), start = ri(1, 2);
+      seq = [start, start + 1, start + 2].map(k => e.repeat(k));
+      answer = e.repeat(start + 3);
+      const s = new Set([answer, e.repeat(start + 2), e.repeat(start + 4), e.repeat(Math.max(1, start))]);
+      opts = shuffle([...s].slice(0, 4));
+    }
+    a.arena.innerHTML = `<div class="seqrow">${seq.map(x => `<span class="seqcell">${x}</span>`).join("")}<span class="seqcell q">?</span></div>
+      <div class="optrow">${opts.map(o => `<button class="opt" data-v="${o}">${o}</button>`).join("")}</div>`;
+    a.arena.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      if (b.dataset.v === answer) { a.correct(130); round(); }
+      else { a.wrong(); b.classList.add("shake"); }
+    });
+  }
+  round();
+}
+
+/* L'Intruso: tutti uguali tranne uno, sempre più nascosto. */
+function gIntruso(a) {
+  a.setPrompt("Trova l'intruso!");
+  let hits = 0;
+  function round() {
+    const lvl = Math.min(3, Math.floor(hits / 3));
+    const cols = [3, 4, 4, 5][lvl], rows = [3, 3, 4, 4][lvl];
+    const size = cols * rows;
+    const pr = shuffle(pick(INTRUSI).slice());
+    const idx = ri(0, size - 1);
+    const cells = Array.from({ length: size }, (_, i) => i === idx ? pr[1] : pr[0]);
+    a.arena.innerHTML = `<div class="odd" style="grid-template-columns:repeat(${cols},minmax(48px,64px))">
+      ${cells.map((e, i) => `<button data-i="${i}">${e}</button>`).join("")}</div>`;
+    a.arena.querySelectorAll("button").forEach(b => b.onclick = () => {
+      if (+b.dataset.i === idx) { a.correct(90 + 35 * lvl); hits++; round(); }
+      else { a.wrong(); b.classList.add("shake"); }
+    });
+  }
+  round();
+}
+
+/* =========================================================================
+   MINI-GIOCHI — CALCOLO
+   ========================================================================= */
+
+/* Calcolo Lampo: quanto fa? Difficoltà a salire. */
+function gCalcoli(a) {
+  a.setPrompt("Quanto fa?");
+  let hits = 0;
+  function round() {
+    const lvl = Math.min(2, Math.floor(hits / 4));
+    let txt, val;
+    if (lvl === 0) {
+      const x = ri(2, 15), y = ri(2, 15);
+      if (Math.random() < .5) { txt = `${x} + ${y}`; val = x + y; }
+      else { const [mx, mn] = x >= y ? [x, y] : [y, x]; txt = `${mx} − ${mn}`; val = mx - mn; }
+    } else if (lvl === 1) {
+      const x = ri(3, 9), y = ri(3, 9); txt = `${x} × ${y}`; val = x * y;
+    } else {
+      const x = ri(2, 9), y = ri(2, 9), z = ri(2, 9); txt = `${x} + ${y} × ${z}`; val = x + y * z;
+    }
+    const opts = numOpts(val, lvl === 0 ? 4 : 8);
+    a.arena.innerHTML = `<div class="bigq">${txt} = ?</div>
+      <div class="optrow">${opts.map(o => `<button class="opt" data-v="${o}">${o}</button>`).join("")}</div>`;
+    a.arena.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      if (+b.dataset.v === val) { a.correct(100 + 45 * lvl); hits++; round(); }
+      else { a.wrong(); b.classList.add("shake"); }
+    });
+  }
+  round();
+}
+
+/* Segno Mancante: quale operatore rende vera l'uguaglianza? */
+function gOperatore(a) {
+  a.setPrompt("Quale segno manca?");
+  const OPS = ["+", "−", "×", "÷"];
+  const calc = (op, x, y) => op === "+" ? x + y : op === "−" ? x - y : op === "×" ? x * y : (y !== 0 && x % y === 0 ? x / y : NaN);
+  function round() {
+    let x, y, op, guard = 0;
+    do {
+      op = pick(OPS);
+      if (op === "÷") { y = ri(2, 9); x = y * ri(2, 9); }
+      else { x = ri(2, 12); y = ri(2, 12); if (op === "−" && y > x) [x, y] = [y, x]; }
+    } while (OPS.some(o => o !== op && calc(o, x, y) === calc(op, x, y)) && guard++ < 100);
+    const c = calc(op, x, y);
+    a.arena.innerHTML = `<div class="bigq">${x} <span class="hole">?</span> ${y} = ${c}</div>
+      <div class="optrow">${OPS.map(o => `<button class="opt" data-v="${o}">${o}</button>`).join("")}</div>`;
+    a.arena.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      if (b.dataset.v === op) { a.correct(130); round(); }
+      else { a.wrong(); b.classList.add("shake"); }
+    });
+  }
+  round();
+}
+
+/* Più o Meno: quale lato vale di più? */
+function gConfronto(a) {
+  a.setPrompt("Tocca il lato che vale <b>di più</b>");
+  let hits = 0;
+  function expr(lvl) {
+    if (lvl === 0) { const x = ri(1, 20); return [String(x), x]; }
+    if (lvl === 1) { const x = ri(1, 12), y = ri(1, 12); return [`${x} + ${y}`, x + y]; }
+    const x = ri(2, 9), y = ri(2, 9); return [`${x} × ${y}`, x * y];
+  }
+  function round() {
+    const lvl = Math.min(2, Math.floor(hits / 4));
+    let L, R, guard = 0;
+    do { L = expr(pick([lvl, Math.max(0, lvl - 1)])); R = expr(lvl); } while (L[1] === R[1] && guard++ < 50);
+    if (Math.random() < .5) [L, R] = [R, L];
+    a.arena.innerHTML = `<div class="duel">
+      <button class="opt" data-v="${L[1]}">${L[0]}</button>
+      <button class="opt" data-v="${R[1]}">${R[0]}</button></div>`;
+    const win = Math.max(L[1], R[1]);
+    a.arena.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      if (+b.dataset.v === win) { a.correct(110 + 35 * lvl); hits++; }
+      else { a.wrong(); }
+      round();
+    });
+  }
+  round();
+}
+
+/* =========================================================================
+   MINI-GIOCHI — VISIVO
+   ========================================================================= */
+
+/* Conta i Blocchi: pila isometrica, contando anche i cubi nascosti.
+   Come il "block counting" dell'originale. */
+function blocksSVG(g) {
+  const d = g.length, w = 26, h = 13, ch = 24;
+  const maxh = Math.max(...g.flat());
+  const W = 2 * d * w + 24;
+  const oy = maxh * ch + h + 8;
+  const H = oy + (2 * d - 2) * h + h + ch + 10;
+  const ox = W / 2;
+  const cubes = [];
+  for (let x = 0; x < d; x++) for (let y = 0; y < d; y++) for (let z = 0; z < g[x][y]; z++) cubes.push([x, y, z]);
+  cubes.sort((p, q) => (p[0] + p[1]) - (q[0] + q[1]) || p[2] - q[2]);
+  const st = 'stroke="rgba(0,0,0,.28)" stroke-width="1" stroke-linejoin="round"';
+  const parts = cubes.map(([x, y, z]) => {
+    const cx = ox + (x - y) * w, cy = oy + (x + y) * h - z * ch;
+    return `<polygon points="${cx},${cy - h} ${cx + w},${cy} ${cx},${cy + h} ${cx - w},${cy}" fill="#ffd97d" ${st}/>
+      <polygon points="${cx - w},${cy} ${cx},${cy + h} ${cx},${cy + h + ch} ${cx - w},${cy + ch}" fill="#f4a940" ${st}/>
+      <polygon points="${cx + w},${cy} ${cx},${cy + h} ${cx},${cy + h + ch} ${cx + w},${cy + ch}" fill="#d97f27" ${st}/>`;
+  });
+  return `<svg class="blocks" viewBox="0 0 ${W} ${H}" aria-hidden="true">${parts.join("")}</svg>`;
+}
+function gBlocchi(a) {
+  a.setPrompt("Quanti blocchi in tutto? (anche quelli nascosti)");
+  let hits = 0;
+  function round() {
+    const d = hits < 3 ? 2 : 3, maxh = hits < 6 ? 2 : 3;
+    let g, tot;
+    do {
+      g = Array.from({ length: d }, () => Array.from({ length: d }, () => ri(0, maxh)));
+      tot = g.flat().reduce((s, v) => s + v, 0);
+    } while (tot < 3);
+    const opts = numOpts(tot, 2).filter(v => v >= 1);
+    while (opts.length < 4) opts.push(tot + opts.length + 1);
+    a.arena.innerHTML = `${blocksSVG(g)}
+      <div class="optrow">${shuffle(opts).map(o => `<button class="opt" data-v="${o}">${o}</button>`).join("")}</div>`;
+    a.arena.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      if (+b.dataset.v === tot) { a.correct(120 + 40 * (d - 2)); hits++; round(); }
+      else { a.wrong(); b.classList.add("shake"); }
+    });
+  }
+  round();
+}
+
+/* Asteroidi in Ordine: tocca i numeri dal più piccolo al più grande.
+   Come l'"asteroid sorting" dell'originale. */
+function gAsteroidi(a) {
+  a.setPrompt("Tocca gli asteroidi in ordine <b>crescente</b>");
+  let n = 4;
+  function round() {
+    const nums = [];
+    while (nums.length < n) { const v = ri(1, 99); if (!nums.includes(v)) nums.push(v); }
+    const sorted = nums.slice().sort((p, q) => p - q);
+    let next = 0;
+    const slots = shuffle(Array.from({ length: 8 }, (_, i) => i)).slice(0, n);
+    const stars = Array.from({ length: 18 }, () =>
+      `<i class="star" style="left:${ri(2, 96)}%;top:${ri(2, 94)}%;opacity:${(ri(3, 8) / 10)}"></i>`).join("");
+    a.arena.innerHTML = `<div class="space">${stars}${nums.map((v, i) => {
+      const s = slots[i], col = s % 4, row = Math.floor(s / 4);
+      const x = 6 + col * 24 + ri(0, 5), y = 8 + row * 44 + ri(0, 10);
+      return `<button class="rock" data-v="${v}" style="left:${x}%;top:${y}%;animation-duration:${ri(22, 38) / 10}s">${v}</button>`;
+    }).join("")}</div>`;
+    a.arena.querySelectorAll(".rock").forEach(b => b.onclick = () => {
+      if (+b.dataset.v === sorted[next]) {
+        b.classList.add("gone");
+        a.correct(60 + 12 * n);
+        next++;
+        if (next === n) { n = Math.min(8, n + 1); a.after(round, 400); }
+      } else { a.wrong(); b.classList.add("shake"); setTimeout(() => b.classList.remove("shake"), 400); }
+    });
+  }
+  round();
+}
+
+/* La Tessera Mancante: righe = colori, colonne = simboli; quale tessera
+   completa il mosaico? Come il "puzzle piece" dell'originale. */
+function gTessera(a) {
+  a.setPrompt("Quale tessera completa il mosaico?");
+  const COLS = ["#ffd166", "#8ecae6", "#b5e48c", "#f4a8c4", "#e8c4f4"];
+  const SHAPES = ["●", "▲", "■", "★", "◆"];
+  let hits = 0;
+  function tile(colore, forma, asButton, extra) {
+    const tag = asButton ? "button" : "div";
+    return `<${tag} class="mtile" style="background:${colore}" ${extra || ""}>${forma}</${tag}>`;
+  }
+  function round() {
+    const rc = sample(COLS, 3), cs = sample(SHAPES, 3);
+    const swap = hits >= 4 && Math.random() < .5;   /* dopo un po', pattern trasposto */
+    const cell = (r, c) => swap ? { col: rc[c], sh: cs[r] } : { col: rc[r], sh: cs[c] };
+    const hr = ri(0, 2), hc = ri(0, 2);
+    let grid = "";
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+      if (r === hr && c === hc) grid += `<div class="mtile hole">?</div>`;
+      else { const t = cell(r, c); grid += tile(t.col, t.sh); }
+    }
+    const good = cell(hr, hc);
+    const wrongs = [];
+    const others = (arr, not) => arr.filter(v => v !== not);
+    wrongs.push({ col: good.col, sh: pick(others(SHAPES, good.sh)) });
+    wrongs.push({ col: pick(others(COLS, good.col)), sh: good.sh });
+    wrongs.push({ col: pick(others(rc, good.col)), sh: pick(others(cs, good.sh)) });
+    const opts = shuffle([{ ...good, ok: 1 }, ...wrongs.map(w => ({ ...w, ok: 0 }))]);
+    a.arena.innerHTML = `<div class="mosaic">${grid}</div>
+      <div class="optrow">${opts.map(o => tile(o.col, o.sh, true, `data-ok="${o.ok}"`)).join("")}</div>`;
+    a.arena.querySelectorAll("button.mtile").forEach(b => b.onclick = () => {
+      if (b.dataset.ok === "1") { a.correct(140); hits++; round(); }
+      else { a.wrong(); b.classList.add("shake"); }
+    });
+  }
+  round();
+}
+
+/* =========================================================================
+   MINI-GIOCHI — MEMORIA
+   ========================================================================= */
+
+/* Trova le Coppie: il classico memory a tempo. */
+function gCoppie(a) {
+  a.setPrompt("Trova le coppie!");
+  let pairs = 6;
+  function board() {
+    const emo = sample(COPPIE_EMO, pairs);
+    const cards = shuffle([...emo, ...emo]);
+    const cols = pairs <= 6 ? 4 : pairs <= 8 ? 4 : 5;
+    let open = null, lock = false, left = pairs;
+    a.arena.innerHTML = `<div class="cardsgrid" style="grid-template-columns:repeat(${cols},auto)">
+      ${cards.map(e => `<button class="mcard" data-e="${e}"><span class="backq">?</span><span class="face">${e}</span></button>`).join("")}</div>`;
+    a.arena.querySelectorAll(".mcard").forEach(b => b.onclick = () => {
+      if (lock || b.classList.contains("open") || b.classList.contains("done")) return;
+      b.classList.add("open");
+      if (!open) { open = b; return; }
+      if (open.dataset.e === b.dataset.e) {
+        open.classList.add("done"); b.classList.add("done");
+        open.classList.remove("open"); b.classList.remove("open");
+        open = null;
+        a.correct(120);
+        if (--left === 0) { pairs = Math.min(10, pairs + 2); a.after(board, 500); }
+      } else {
+        lock = true;
+        const o = open; open = null;
+        a.wrong(false);                       /* niente penalità: si perde solo il moltiplicatore */
+        a.after(() => { o.classList.remove("open"); b.classList.remove("open"); lock = false; }, 650);
+      }
+    });
+  }
+  board();
+}
+
+/* Ripeti la Sequenza: quattro tasti colorati, la sequenza si allunga. */
+function gSimon(a) {
+  const COLORS = ["#f76c8c", "#3aa8ff", "#34d399", "#ffb703"];
+  let seq = [], pos = 0, len = 3, inputOk = false;
+  a.arena.innerHTML = `<div class="simonstatus" id="siSt">Osserva…</div>
+    <div class="simon">${COLORS.map((c, i) => `<button class="pad" data-i="${i}" style="background:${c}"></button>`).join("")}</div>`;
+  const st = a.arena.querySelector("#siSt");
+  const padEls = [...a.arena.querySelectorAll(".pad")];
+  function flash(i, short) {
+    padEls[i].classList.add("on"); Sfx.pad(i);
+    a.after(() => padEls[i].classList.remove("on"), short ? 180 : 320);
+  }
+  function playback() {
+    inputOk = false; pos = 0;
+    st.textContent = "Osserva…";
+    a.setPrompt(`Sequenza di <b>${len}</b>`);
+    seq = Array.from({ length: len }, () => ri(0, 3));
+    seq.forEach((p, i) => a.after(() => flash(p), 550 * i + 600));
+    a.after(() => { inputOk = true; st.textContent = "Tocca la sequenza!"; }, 550 * len + 650);
+  }
+  padEls.forEach((b, i) => b.onclick = () => {
+    if (!inputOk) return;
+    flash(i, true);
+    if (i === seq[pos]) {
+      pos++;
+      if (pos === seq.length) {
+        inputOk = false;
+        a.correct(60 * len);
+        len = Math.min(8, len + 1);
+        a.after(playback, 700);
+      }
+    } else {
+      inputOk = false;
+      a.wrong();
+      len = Math.max(3, len - 1);
+      a.after(playback, 700);
+    }
+  });
+  playback();
+}
+
+/* Che Cosa C'era: memorizza gli oggetti, poi riconosci quello che c'era. */
+function gScomparso(a) {
+  let n = 4, hits = 0;
+  function round() {
+    a.setPrompt("Memorizza gli oggetti…");
+    const shown = sample(MEM_EMO, n);
+    const others = MEM_EMO.filter(e => !shown.includes(e));
+    a.arena.innerHTML = `<div class="memgrid">${shown.map(e => `<span>${e}</span>`).join("")}</div>`;
+    const t = Math.max(1400, 2600 - hits * 150);
+    a.after(() => {
+      const target = pick(shown);
+      const opts = shuffle([target, ...sample(others, 3)]);
+      a.setPrompt("Quale <b>c'era</b>?");
+      a.arena.innerHTML = `<div class="optrow">${opts.map(o => `<button class="opt big" data-v="${o}">${o}</button>`).join("")}</div>`;
+      a.arena.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+        if (b.dataset.v === target) { a.correct(110 + 25 * (n - 4)); hits++; if (hits % 2 === 0 && n < 8) n++; }
+        else a.wrong();
+        round();
+      });
+    }, t);
+  }
+  round();
+}
+
+/* =========================================================================
+   ELENCO GIOCHI
+   ========================================================================= */
+const GAMES = [
+  { id: "bilance",   cat: "logica",  icona: "⚖️", nome: "Le Bilance",          desc: "Le bilance rivelano chi pesa di più: deduci l'oggetto più pesante (o più leggero).", start: gBilance },
+  { id: "sequenze",  cat: "logica",  icona: "🔮", nome: "Che Cosa Viene Dopo", desc: "Osserva la sequenza e scegli l'elemento che la continua.", start: gSequenze },
+  { id: "intruso",   cat: "logica",  icona: "🕵️", nome: "L'Intruso",           desc: "Uno di questi non è come gli altri: trovalo al volo.", start: gIntruso },
+  { id: "calcoli",   cat: "calcolo", icona: "⚡", nome: "Calcolo Lampo",       desc: "Somme, sottrazioni e tabelline: rispondi il più in fretta possibile.", start: gCalcoli },
+  { id: "operatore", cat: "calcolo", icona: "❓", nome: "Segno Mancante",      desc: "Più, meno, per o diviso? Trova il segno che rende vera l'uguaglianza.", start: gOperatore },
+  { id: "confronto", cat: "calcolo", icona: "🆚", nome: "Più o Meno",          desc: "Due espressioni, un solo tocco: scegli il lato che vale di più.", start: gConfronto },
+  { id: "blocchi",   cat: "visivo",  icona: "🧊", nome: "Conta i Blocchi",     desc: "Quanti cubi ci sono nella pila? Conta anche quelli nascosti dietro.", start: gBlocchi },
+  { id: "asteroidi", cat: "visivo",  icona: "☄️", nome: "Asteroidi in Ordine", desc: "Tocca gli asteroidi numerati dal più piccolo al più grande.", start: gAsteroidi },
+  { id: "tessera",   cat: "visivo",  icona: "🧩", nome: "La Tessera Mancante", desc: "Scopri lo schema del mosaico e scegli la tessera giusta.", start: gTessera },
+  { id: "coppie",    cat: "memoria", icona: "🃏", nome: "Trova le Coppie",     desc: "Gira le carte e ricorda dove sono: le coppie valgono punti.", start: gCoppie },
+  { id: "simon",     cat: "memoria", icona: "🎹", nome: "Ripeti la Sequenza",  desc: "Guarda i tasti accendersi, poi ripeti la sequenza. Si allunga sempre.", start: gSimon },
+  { id: "scomparso", cat: "memoria", icona: "👀", nome: "Che Cosa C'era",      desc: "Pochi secondi per memorizzare gli oggetti, poi riconosci quello che c'era.", start: gScomparso }
+];
+
+/* =========================================================================
+   SCHERMATE — home e risultati
+   ========================================================================= */
+function renderHome() {
+  const best = Store.mem.best;
+  const chip = $("#bestChip");
+  if (best > 0) {
+    chip.hidden = false;
+    chip.innerHTML = `🏆 Record: <b>${best} g</b> — ${RANKS[rankIndex(best)]}`;
+  } else chip.hidden = true;
+
+  $("#catGrid").innerHTML = CAT_ORDER.map(c => {
+    const cat = CATS[c];
+    return `<div class="catcard">
+      <div class="cathead"><span class="badge" style="background:${cat.colore}">${cat.icona}</span> ${cat.nome}</div>
+      ${GAMES.filter(g => g.cat === c).map(g => {
+        const r = Store.mem.games[g.id];
+        return `<button class="gamebtn" data-id="${g.id}">
+          <span class="gi">${g.icona}</span>
+          <span>${g.nome}<span class="gd">${g.desc}</span></span>
+          ${r ? `<span class="rec">🏅 ${r}</span>` : ""}
+        </button>`;
+      }).join("")}
+    </div>`;
+  }).join("");
+  document.querySelectorAll(".gamebtn").forEach(b => b.onclick = () => Engine.startPractice(b.dataset.id));
+}
+
+function rankIndex(weight) {
+  return Math.max(0, Math.min(RANKS.length - 1, Math.floor((weight - 300) / 100)));
+}
+function weightFromScore(total) {
+  return Math.min(2999, 300 + Math.round(total * .08));
+}
+
+function renderRoundEnd(results) {
+  const total = results.reduce((s, r) => s + r.score, 0);
+  const weight = weightFromScore(total);
+  const rank = RANKS[rankIndex(weight)];
+  const record = weight > Store.mem.best;
+  if (record) { Store.mem.best = weight; Store.save(); }
+  const maxScore = Math.max(2000, ...results.map(r => r.score));
+  $("#endCard").innerHTML = `
+    <div class="brain" id="brainEmo" style="font-size:50px">🧠</div>
+    <div class="weight"><span id="wNum">0</span> <small>grammi</small></div>
+    <div><span class="rank">${rank}</span></div>
+    ${record ? `<div class="newrec">✨ Nuovo record personale!</div>` : ""}
+    <div class="breakdown">
+      ${results.map(r => {
+        const c = CATS[r.g.cat];
+        return `<div class="brow">
+          <span class="bname">${c.icona} ${r.g.nome}</span>
+          <span class="bbar"><i style="width:${Math.round(r.score / maxScore * 100)}%;background:${c.colore}"></i></span>
+          <span class="bval">${r.score}</span>
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="endbtns">
+      <button class="cta" id="btnAgain">Gioca ancora</button>
+      <button class="cta ghost" id="btnHome">Menu</button>
+    </div>`;
+  $("#btnAgain").onclick = () => Engine.startRound();
+  $("#btnHome").onclick = () => { renderHome(); showScreen("scrHome"); };
+  Sfx.win();
+  /* contatore animato del peso + cervello che cresce */
+  const dur = 1600, t0 = performance.now();
+  const num = $("#wNum"), emo = $("#brainEmo");
+  (function step(t) {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    const w = Math.round(weight * e);
+    num.textContent = w;
+    emo.style.fontSize = (50 + Math.min(120, w / 18)) + "px";
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+function renderPracticeEnd(r) {
+  const best = Store.mem.games[r.g.id] || 0;
+  const c = CATS[r.g.cat];
+  $("#endCard").innerHTML = `
+    <div class="brain" style="font-size:64px">${r.g.icona}</div>
+    <h2 style="margin:10px 0 4px">${r.g.nome}</h2>
+    <div><span class="catchip" style="background:${c.colore};display:inline-block;color:#fff;font-weight:900;font-size:14px;border-radius:999px;padding:6px 16px">${c.icona} ${c.nome}</span></div>
+    <div class="weight"><span>${r.score}</span> <small>punti</small></div>
+    ${r.score >= best && r.score > 0 ? `<div class="newrec">✨ Record personale!</div>` : `<div style="color:var(--soft);font-weight:800">Record: ${best}</div>`}
+    <div class="endbtns">
+      <button class="cta" id="btnAgain">Ancora</button>
+      <button class="cta ghost" id="btnHome">Menu</button>
+    </div>`;
+  $("#btnAgain").onclick = () => Engine.startPractice(r.g.id);
+  $("#btnHome").onclick = () => { renderHome(); showScreen("scrHome"); };
+}
+
+/* ---------- avvio ---------- */
+$("#btnRound").onclick = () => Engine.startRound();
+$("#btnGo").onclick = () => Engine.launch();
+$("#btnIntroQuit").onclick = () => Engine.quit();
+$("#btnQuit").onclick = () => Engine.quit();
+$("#btnMute").onclick = () => {
+  Sfx.on = !Sfx.on;
+  $("#btnMute").textContent = Sfx.on ? "🔊" : "🔇";
+};
+renderHome();
+
+/* esposto per debug e test automatici */
+window.__cervellone = { Engine, GAMES, Store, weightFromScore, rankIndex };
+
+if ("serviceWorker" in navigator && location.protocol === "https:")
+  navigator.serviceWorker.register("sw.js").catch(function () {});
+</script>
+</body>
+</html>
