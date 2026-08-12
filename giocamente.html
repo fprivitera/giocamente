@@ -174,6 +174,19 @@ body{
 .tile.right{border-color:var(--c1);animation:pop .5s ease}
 .tile.wrong{animation:wob .45s ease}
 .tile.hint{animation:hint 1.1s ease-in-out infinite}
+
+/* ---------- filastrocche: tessere-parola + conferma verde ---------- */
+/* più larghe che alte: una parola respira, e l'altezza resta >= 2cm */
+.tile.wtile{width:calc(var(--tap)*1.3)}
+.tile .word{font-size:clamp(19px,4vmin,34px);font-weight:900;text-align:center;line-height:1.15}
+.tile.sel{border-color:var(--c2)}
+.gobtn{
+  width:calc(var(--tap)*1.3);height:var(--tap);border:0;border-radius:var(--r);
+  background:var(--c3);color:#fff;font-size:clamp(44px,10vmin,80px);font-weight:900;line-height:1;
+  box-shadow:var(--shadow);cursor:pointer;transition:transform .14s ease,opacity .3s ease;
+}
+.gobtn:active{transform:scale(.94)}
+.gobtn.dim{opacity:.3}
 /* Il modello deve leggersi subito come "l'esempio da guardare", mai come
    una delle risposte: sfondo crema (le risposte sono bianche), tratteggio
    più marcato, occhietti sopra e molto più aria prima delle tessere. */
@@ -447,6 +460,11 @@ const STR = {
     soundPrompt: v => v + " Chi fa questo verso?",
     soundOnlyPrompt: "Chi fa questo verso?",
     soundConfirm: a => "È " + a + "!",
+    instrTitle: "Indovina il suono",
+    instrPrompt: v => v + " Quale strumento fa questo suono?",
+    instrOnlyPrompt: "Quale strumento fa questo suono?",
+    rimeTitle: "Completa la filastrocca",
+    rimeHow: "Tocca le parole per sentirle, poi premi il segno verde!",
     symTitle: "La metà che manca",
     symPrompt: "Completa la figura: tocca la metà che manca!",
     symDone: "La figura è completa!"
@@ -526,6 +544,11 @@ const STR = {
     soundPrompt: v => v + " Who makes this sound?",
     soundOnlyPrompt: "Who makes this sound?",
     soundConfirm: a => "It's " + a + "!",
+    instrTitle: "Guess the sound",
+    instrPrompt: v => v + " Which instrument makes this sound?",
+    instrOnlyPrompt: "Which instrument makes this sound?",
+    rimeTitle: "Finish the rhyme",
+    rimeHow: "Tap the words to hear them, then press the green check!",
     symTitle: "The missing half",
     symPrompt: "Complete the picture: tap the missing half!",
     symDone: "The picture is complete!"
@@ -832,6 +855,82 @@ const Critter = {
       this.seg(ac, t, .35, 300, 620, "sine", v * .9, { a: .08 });
       this.seg(ac, t + .33, .8, 620, 430, "sine", v * .9, { vib: [5, 12], a: .05 });
       return 1.4;
+    }
+  }
+};
+
+/* =========================================================
+   2c. STRUMENTI MUSICALI — sintesi WebAudio, zero file esterni
+   ---------------------------------------------------------
+   Stessa idea dei versi degli animali (sezione 2b), stessi
+   mattoni (seg e noise, presi in prestito da Critter: non
+   usano `this`): ogni strumento ha una piccola ricetta che ne
+   imita il timbro — colpo di tamburo, rintocco, squillo di
+   tromba... play() ritorna la durata in secondi, così la voce
+   fa la domanda DOPO il suono, senza parlargli sopra.
+   ========================================================= */
+const Orchestra = {
+  seg: Critter.seg, noise: Critter.noise,
+  play(name) {
+    if (!S.sound) return 0;                       // suoni spenti: resta l'onomatopea letta dalla voce
+    const ac = Sound.ctx(); if (!ac) return 0;
+    const r = this.recipes[name]; if (!r) return 0;
+    return r.call(this, ac, ac.currentTime + .04, .5 * S.soundVolume);
+  },
+  recipes: {
+    drum(ac, t, v) {                              // tre colpi: pelle bassa + colpetto secco
+      [0, .32, .64].forEach(d => {
+        this.seg(ac, t + d, .22, 160, 55, "sine", v * 1.2, { a: .005 });
+        this.noise(ac, t + d, .06, v * .4, { f: ["lowpass", 1200, 1], a: .005 });
+      });
+      return 1.1;
+    },
+    bell(ac, t, v) {                              // due rintocchi: fondamentale + parziale acuta che sfuma
+      [0, .5].forEach(d => {
+        this.seg(ac, t + d, .55, 1319, 1319, "sine", v * .8, { a: .004 });
+        this.seg(ac, t + d, .3, 3520, 3520, "sine", v * .25, { a: .004 });
+      });
+      return 1.25;
+    },
+    trumpet(ac, t, v) {                           // squillo: due note corte e una lunga, timbro d'ottone
+      const o = { f: ["bandpass", 1100, 1], a: .03 };
+      this.seg(ac, t, .16, 523, 523, "sawtooth", v * .9, o);
+      this.seg(ac, t + .22, .16, 659, 659, "sawtooth", v * .9, o);
+      this.seg(ac, t + .44, .6, 784, 784, "sawtooth", v * .9, { f: ["bandpass", 1100, 1], vib: [6, 7], a: .03 });
+      return 1.25;
+    },
+    piano(ac, t, v) {                             // arpeggio "plin plon": attacco netto, ottava che accompagna
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+        this.seg(ac, t + i * .19, .5, f, f, "triangle", v * .9, { a: .005 });
+        this.seg(ac, t + i * .19, .3, f * 2, f * 2, "sine", v * .25, { a: .005 });
+      });
+      return 1.3;
+    },
+    guitar(ac, t, v) {                            // pennata: cinque corde a scalare che risuonano
+      [196, 246.9, 329.6, 392, 493.9].forEach((f, i) =>
+        this.seg(ac, t + i * .05, .8, f, f, "sawtooth", v * .45, { f: ["lowpass", 1900, 1], a: .008 }));
+      return 1.15;
+    },
+    violin(ac, t, v) {                            // arcata: attacco morbido e vibrato largo
+      const o = { f: ["bandpass", 2200, .8], vib: [6, 9], a: .14 };
+      this.seg(ac, t, .55, 440, 440, "sawtooth", v * .8, o);
+      this.seg(ac, t + .5, .65, 587.3, 587.3, "sawtooth", v * .8, o);
+      return 1.35;
+    },
+    sax(ac, t, v) {                               // frase morbida con un filo di soffio
+      const o = { f: ["lowpass", 1500, 2], vib: [5, 6], a: .05 };
+      this.seg(ac, t, .24, 294, 294, "sawtooth", v * .8, o);
+      this.seg(ac, t + .28, .24, 370, 370, "sawtooth", v * .8, o);
+      this.seg(ac, t + .56, .55, 440, 440, "sawtooth", v * .8, o);
+      this.noise(ac, t, 1, v * .12, { f: ["bandpass", 1800, 1], a: .1 });
+      return 1.3;
+    },
+    accordion(ac, t, v) {                         // accordo tenuto: ance leggermente scordate che "battono"
+      [261.6, 329.6, 392].forEach(f => {
+        this.seg(ac, t, 1, f, f, "square", v * .22, { f: ["lowpass", 2400, 1], vib: [5, 3], a: .1 });
+        this.seg(ac, t, 1, f * 1.006, f * 1.006, "square", v * .16, { f: ["lowpass", 2400, 1], a: .1 });
+      });
+      return 1.3;
     }
   }
 };
@@ -1717,6 +1816,161 @@ KidBrain.register({
     ctx.el.appendChild(model);
     ctx.el.appendChild(row);
     ctx.prompt(T.symPrompt);
+  }
+});
+
+/* =========================================================
+   8f. GIOCO 8 — Indovina il suono (strumenti musicali)
+   ---------------------------------------------------------
+   Gemello del gioco dei versi (8d), ma con gli strumenti:
+   si sente il suono vero sintetizzato (vedi Orchestra, 2c)
+   e si tocca la figura dello strumento che lo fa. Le scelte
+   sono solo immagini: a tre anni non si legge, e qui non
+   serve — l'onomatopea scritta nella barra è per i genitori,
+   e viene letta dalla voce solo se i suoni sono spenti.
+   Livello 1 confronta timbri lontanissimi (tamburo, campanella,
+   tromba); ai livelli 2-3 arrivano strumenti dal timbro più
+   simile fra loro, per una discriminazione più fine.
+   ========================================================= */
+const STRUMENTI = [
+  { e: "🥁", lv: 1, fx: "drum", it: "il tamburo", en: "the drum", verse: { it: "Tum tum tum!", en: "Boom boom boom!" } },
+  { e: "🔔", lv: 1, fx: "bell", it: "la campanella", en: "the bell", verse: { it: "Din din din!", en: "Ding ding ding!" } },
+  { e: "🎺", lv: 1, fx: "trumpet", it: "la tromba", en: "the trumpet", verse: { it: "Pe pe peee!", en: "Toot toot toooot!" } },
+  { e: "🎹", lv: 2, fx: "piano", it: "il pianoforte", en: "the piano", verse: { it: "Plin plon!", en: "Plink plonk!" } },
+  { e: "🎸", lv: 2, fx: "guitar", it: "la chitarra", en: "the guitar", verse: { it: "Dlen dlen!", en: "Strum strum!" } },
+  { e: "🎻", lv: 2, fx: "violin", it: "il violino", en: "the violin", verse: { it: "Ziin ziin!", en: "Zeee zeee!" } },
+  { e: "🎷", lv: 3, fx: "sax", it: "il sassofono", en: "the saxophone", verse: { it: "Pa pa paaa!", en: "Doo doo dooo!" } },
+  { e: "🪗", lv: 3, fx: "accordion", it: "la fisarmonica", en: "the accordion", verse: { it: "Umpa umpa!", en: "Oompah oompah!" } }
+];
+
+KidBrain.register({
+  id: "instrument", titleKey: "instrTitle", icon: "🎺", tint: "var(--c5)", rounds: 5,
+  playRound(ctx) {
+    const n = ctx.level === 1 ? 2 : 3;
+    const opts = shuffle(STRUMENTI.filter(x => x.lv <= ctx.level)).slice(0, n);
+    const target = pick(opts);
+
+    const row = mk("div", "row");
+    opts.forEach(o => {
+      const t = mk("div", "tile");
+      t.appendChild(mk("span", "face", o.e));
+      ctx.choice(t, o === target, { stamp: target.e, say: T.soundConfirm(target[LANG]) });
+      row.appendChild(t);
+    });
+    ctx.el.appendChild(row);
+    /* prima il suono vero, poi la sola domanda: l'onomatopea scritta resta
+       nella barra per i genitori, e viene letta solo se i suoni sono spenti */
+    ctx.prompt(T.instrPrompt(target.verse[LANG]), {
+      fx: () => Orchestra.play(target.fx),
+      fxSay: T.instrOnlyPrompt
+    });
+  }
+});
+
+/* =========================================================
+   8g. GIOCO 9 — Completa la filastrocca
+   ---------------------------------------------------------
+   Bubo recita una filastrocca (o un proverbio, ai livelli
+   alti) lasciando in sospeso l'ultima parola: la rima stessa
+   suggerisce la risposta, ed è proprio quella sensibilità
+   fonologica che qui si allena. Le parole fra cui scegliere
+   sono scritte, ma a tre anni non si legge: toccarne una la
+   fa leggere ad alta voce E la seleziona; il segno verde ✔
+   conferma. È l'unico gioco a due tempi (scegli, poi conferma):
+   serve a poter ascoltare tutte le parole con calma prima di
+   rispondere, senza che il primo tocco conti come risposta.
+   Il feedback (lode, aiuto dopo 2 errori, nessun fallimento)
+   ricalca a mano quello di ctx.choice, che qui non basta
+   perché la correttezza si giudica solo alla conferma.
+   Le filastrocche non si traducono: per ogni lingua c'è il
+   suo repertorio (Stella stellina... / Twinkle twinkle...).
+   ========================================================= */
+const RIME = {
+  it: [
+    { lv: 1, pre: "Stella stellina, la notte si avvicina: la fiamma traballa, la mucca è nella…", ans: "stalla", d: ["palla", "luna"] },
+    { lv: 1, pre: "Giro giro tondo, casca il mondo, casca la terra, tutti giù per…", ans: "terra", d: ["cielo", "casa"] },
+    { lv: 1, pre: "Nella vecchia fattoria, ia-ia-…", ans: "oh", d: ["bau", "miao"] },
+    { lv: 2, pre: "La Befana vien di notte, con le scarpe tutte…", ans: "rotte", d: ["nuove", "pulite"] },
+    { lv: 2, pre: "Farfallina bella e bianca, vola vola e mai si…", ans: "stanca", d: ["ferma", "siede"] },
+    { lv: 2, pre: "Ambarabà ciccì coccò, tre civette sul…", ans: "comò", d: ["divano", "tetto"] },
+    { lv: 3, pre: "Chi va piano, va sano e va…", ans: "lontano", d: ["veloce", "vicino"] },
+    { lv: 3, pre: "Rosso di sera, bel tempo si…", ans: "spera", d: ["vede", "sogna"] }
+  ],
+  en: [
+    { lv: 1, pre: "Twinkle twinkle little star, how I wonder what you…", ans: "are", d: ["do", "see"] },
+    { lv: 1, pre: "Old MacDonald had a farm, ee-i-ee-i-…", ans: "oh", d: ["moo", "woof"] },
+    { lv: 1, pre: "Rain, rain, go away, come again another…", ans: "day", d: ["night", "week"] },
+    { lv: 2, pre: "Baa baa black sheep, have you any…", ans: "wool", d: ["milk", "bread"] },
+    { lv: 2, pre: "Row, row, row your boat, gently down the…", ans: "stream", d: ["road", "hill"] },
+    { lv: 2, pre: "Humpty Dumpty sat on a wall, Humpty Dumpty had a great…", ans: "fall", d: ["nap", "laugh"] },
+    { lv: 3, pre: "The itsy bitsy spider climbed up the water…", ans: "spout", d: ["slide", "tree"] },
+    { lv: 3, pre: "An apple a day keeps the doctor…", ans: "away", d: ["happy", "near"] }
+  ]
+};
+
+KidBrain.register({
+  id: "rhyme", titleKey: "rimeTitle", icon: "🎤", tint: "var(--c4)", rounds: 5,
+  playRound(ctx) {
+    const n = ctx.level === 1 ? 2 : 3;
+    const rhyme = pick(RIME[LANG].filter(r => r.lv <= ctx.level));
+    const words = shuffle([rhyme.ans].concat(rhyme.d.slice(0, n - 1)));
+    let sel = null, wrongs = 0, locked = false;
+
+    const row = mk("div", "row");
+    const tiles = [];
+    words.forEach(w => {
+      const t = mk("div", "tile wtile");
+      t.appendChild(mk("span", "word", w));
+      t.addEventListener("click", () => {
+        if (locked) return;
+        Sound.tap();
+        tiles.forEach(x => x.classList.toggle("sel", x === t));
+        sel = w;
+        go.style.visibility = "visible";
+        Voice.say(w);                    // la parola si ascolta: a tre anni non si legge
+      });
+      tiles.push(t); row.appendChild(t);
+    });
+
+    const goRow = mk("div", "row");
+    const go = mk("button", "gobtn", "✔");
+    go.type = "button";
+    go.setAttribute("aria-label", "OK");
+    go.style.visibility = "hidden";      // compare solo dopo la prima scelta
+    go.addEventListener("click", () => {
+      if (locked || !sel) return;
+      if (sel === rhyme.ans) {
+        locked = true;
+        Sound.good(); FX.stamp("🎉"); Mascot.react("happy");
+        tiles.forEach(x => {
+          x.classList.remove("hint");
+          x.classList.toggle("right", x.textContent === rhyme.ans);
+          x.classList.toggle("dim", x.textContent !== rhyme.ans);
+        });
+        go.classList.add("dim");
+        /* la lode ripete la filastrocca intera, stavolta completa */
+        const t0 = Date.now();
+        Voice.say(praiseText() + " " + rhyme.pre.replace(/…$/, " " + rhyme.ans + "!"),
+          () => setTimeout(ctx.solved, Math.max(0, 950 - (Date.now() - t0))));
+        setTimeout(ctx.solved, 7000);    // tetto: mai fermi se la sintesi vocale manca
+      } else {
+        wrongs++;
+        Sound.nope(); Mascot.react("oops");
+        const st = tiles.find(x => x.classList.contains("sel"));
+        if (st) { st.classList.remove("wrong"); void st.offsetWidth; st.classList.add("wrong"); }
+        if (wrongs === 1) Voice.say(T.tryAgain);
+        if (wrongs >= 2) {               // nessun fallimento: dopo 2 tentativi si accende l'aiuto
+          tiles[words.indexOf(rhyme.ans)].classList.add("hint");
+          if (wrongs === 2) Voice.say(T.lookHint);
+        }
+      }
+    });
+    goRow.appendChild(go);
+
+    ctx.el.appendChild(row);
+    ctx.el.appendChild(goRow);
+    /* al primo turno la consegna spiega anche il gesto (tocca, ascolta, conferma) */
+    ctx.prompt(rhyme.pre, ctx.round === 0 ? { say: rhyme.pre + " " + T.rimeHow } : undefined);
   }
 });
 
