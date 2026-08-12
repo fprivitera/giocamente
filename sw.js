@@ -1,6 +1,6 @@
 /* GiocaMente — service worker minimale: precache delle pagine,
    cache-first con aggiornamento in background. */
-const CACHE = "giocamente-v7";
+const CACHE = "giocamente-v8";
 const FILES = ["./", "./index.html", "./giocamente.html", "./cervellone.html"];
 
 self.addEventListener("install", e => {
