@@ -1243,10 +1243,14 @@ function makeCtx(game, level, round, total, resolve) {
 
     /** Chiude il turno e riconsegna al motore gli errori fatti (0 = risposta
         corretta al primo tocco): è il dato con cui Adaptive decide il livello
-        del turno successivo. onSolved(wrongs), se il gioco lo imposta, viene
-        chiamato prima: serve ai giochi che vogliono osservare l'esito. */
-    solved() {
+        del turno successivo. I giochi che passano da ctx.choice non devono
+        fare nulla; chi gestisce il feedback da sé (es. la filastrocca) passa
+        qui i propri errori, altrimenti risulterebbe sempre perfetto.
+        onSolved(wrongs), se il gioco lo imposta, viene chiamato prima:
+        serve ai giochi che vogliono osservare l'esito. */
+    solved(w) {
       if (ctx._done) return; ctx._done = true; armIdle(null);
+      if (typeof w === "number") wrongs = w;
       if (ctx.onSolved) ctx.onSolved(wrongs);
       resolve(wrongs);
     }
@@ -1575,11 +1579,9 @@ KidBrain.register({
    Ogni risposta giusta rinomina l'emozione ad alta voce: qui
    si allena il lessico emotivo, non soltanto la scelta.
    Il livello 4 (divertita, disgustata, infreddolita: sfumature
-   più fini, con 4 scelte) non arriva col passare dei round come
-   negli altri giochi, ma solo rispondendo bene: due risposte
-   giuste al primo tocco di fila fanno salire di livello, come
-   nel gioco delle forme. Il progresso resta in memoria fra una
-   partita e l'altra della stessa sessione, mai una retrocessione.
+   più fini, con 4 scelte) si raggiunge solo rispondendo bene:
+   ci pensa il sistema adattivo del motore (Adaptive), qui basta
+   dichiarare maxLevel: 4.
    ========================================================= */
 const EMOTIONS = [
   { e: "😀", lv: 1, it: "contenta", en: "happy" },
@@ -1592,17 +1594,10 @@ const EMOTIONS = [
   { e: "🤢", lv: 4, it: "disgustata", en: "disgusted" },
   { e: "🥶", lv: 4, it: "infreddolita", en: "freezing" }
 ];
-const EMO_MAX_LEVEL = 4;
-const emoProgress = { level: 1, streak: 0 };
-
 KidBrain.register({
-  id: "emotion", titleKey: "emoTitle", icon: "😊", tint: "var(--c1)", rounds: 8,
+  id: "emotion", titleKey: "emoTitle", icon: "😊", tint: "var(--c1)", rounds: 8, maxLevel: 4,
   playRound(ctx) {
-    if (ctx.round === 0) {
-      emoProgress.level = Math.min(EMO_MAX_LEVEL, Math.max(emoProgress.level, Profile.minLevel()));
-      emoProgress.streak = 0;
-    }
-    const level = emoProgress.level;
+    const level = ctx.level;
     const n = level === 1 ? 2 : (level >= 4 ? 4 : 3);
     const opts = shuffle(EMOTIONS.filter(x => x.lv <= level)).slice(0, n);
     const target = pick(opts);
@@ -1616,18 +1611,6 @@ KidBrain.register({
     });
     ctx.el.appendChild(row);
     ctx.prompt(T.emoPrompt(target[LANG]));
-
-    ctx.onSolved = wrongs => {
-      if (wrongs === 0) {
-        emoProgress.streak++;
-        if (emoProgress.streak >= 2) {
-          emoProgress.level = Math.min(EMO_MAX_LEVEL, emoProgress.level + 1);
-          emoProgress.streak = 0;
-        }
-      } else {
-        emoProgress.streak = 0;            // errore nel turno: livello mantenuto, serie azzerata
-      }
-    };
   }
 });
 
@@ -1976,11 +1959,12 @@ KidBrain.register({
           x.classList.toggle("dim", x.textContent !== rhyme.ans);
         });
         go.classList.add("dim");
-        /* la lode ripete la filastrocca intera, stavolta completa */
+        /* la lode ripete la filastrocca intera, stavolta completa;
+           gli errori contati qui vanno riportati al motore per l'adattività */
         const t0 = Date.now();
         Voice.say(praiseText() + " " + rhyme.pre.replace(/…$/, " " + rhyme.ans + "!"),
-          () => setTimeout(ctx.solved, Math.max(0, 950 - (Date.now() - t0))));
-        setTimeout(ctx.solved, 7000);    // tetto: mai fermi se la sintesi vocale manca
+          () => setTimeout(() => ctx.solved(wrongs), Math.max(0, 950 - (Date.now() - t0))));
+        setTimeout(() => ctx.solved(wrongs), 7000);  // tetto: mai fermi se la sintesi vocale manca
       } else {
         wrongs++;
         Sound.nope(); Mascot.react("oops");
